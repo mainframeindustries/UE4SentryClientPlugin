@@ -72,3 +72,16 @@ Plugins/*/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+
+# project buld folders
+Intermediate/
+Binaries/
+
+# the place were we put our sentry-native release
+sentry-native-release/
+
+# allow all the third party built binaries
+!sentry-native/
+# but ignore any cmake artifacts in there
+**/sentry-native/**/*.cmake
