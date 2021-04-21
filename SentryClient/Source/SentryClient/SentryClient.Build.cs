@@ -37,9 +37,9 @@ public class SentryClient : ModuleRules
 			{
 				"CoreUObject",
 				"Engine",
-				"Slate",
-				"SlateCore",
-				//"Http",
+				//"Slate",
+				//"SlateCore",
+				"Projects",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

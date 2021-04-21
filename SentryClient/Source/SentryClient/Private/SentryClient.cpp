@@ -9,6 +9,7 @@
 #include "Misc/Paths.h"
 #include "Misc/CommandLine.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
+#include "Interfaces/IPluginManager.h"
 
 
 #define LOCTEXT_NAMESPACE "FSentryClientModule"
@@ -64,6 +65,7 @@ FString USentryClientConfig::GetRelease()
 	return val;
 }
 
+
 void FSentryClientModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
@@ -101,14 +103,14 @@ void FSentryClientModule::StartupModule()
 
 	// Location of the crashpad_backend.exe on windows
 #if PLATFORM_WINDOWS
-	FString Plugins = FPaths::ProjectPluginsDir();
-	FString PluginName = TEXT(SENTRY_PLUGIN_NAME);
-	FString CrashPad = FPaths::Combine(Plugins, PluginName, TEXT("Source/ThirdParty/sentry-native/Win64/bin/crashpad_handler.exe"));
+	auto Plugin = IPluginManager::Get().FindPlugin(SENTRY_PLUGIN_NAME);
+	FString BaseDir = Plugin->GetBaseDir();
+	FString CrashPad = FPaths::Combine(BaseDir, TEXT("Source/ThirdParty/sentry-native/Win64/bin/crashpad_handler.exe"));
 	sentry_options_set_handler_pathw(options, *CrashPad);
 #endif
 
 
-	sentry_options_set_dsn(options, "https://YOUR_KEY@oORG_ID.ingest.sentry.io/PROJECT_ID");
+	sentry_options_set_dsn(options, TCHAR_TO_ANSI(*dsn));
 	sentry_init(options);
 	initialized = true;
 }

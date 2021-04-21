@@ -30,7 +30,7 @@ private:
 // Defaults can be saved in DefaultSentry.ini (or other Sentry.ini files)
 // under the key following key and example:
 // [/Script/SentryClient.SentryClientConfig]
-// DSN=http://my-sentry-dsn
+// DSN=https://YOUR_KEY@oORG_ID.ingest.sentry.io/PROJECT_ID
 // Release=v.0.1.9
 //
 // See https://docs.unrealengine.com/en-US/ProductionPipelines/ConfigurationFiles/index.html for information on the config file hierarchy
