@@ -5,9 +5,10 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-#include "SentryClient.generated.h"
+#include "SentryClientModule.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogSentryClient, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogSentryCore, Log, All);
 
 // use this to figure out the plugin folder at runtime.
 // if the name of this plugin changes, it needs to be reflected here.
@@ -20,8 +21,21 @@ public:
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+
+
+	bool SentryInit(const TCHAR* DNS, const TCHAR* Environment, const TCHAR* Release);
+	void SentryClose();
+
+	// get the module if it exists
+	static FSentryClientModule* Get();
+	bool IsInitialized() const { return initialized; }
+
+	static void SentryLog(int level, const char* message, va_list args);
+
 private:
 	bool initialized = false;
+	FString dbPath;
+	FString CrashPadLocation;
 };
 
 
