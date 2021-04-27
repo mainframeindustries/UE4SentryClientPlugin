@@ -79,6 +79,18 @@ FString USentryClientConfig::GetRelease()
 	return val;
 }
 
+bool USentryClientConfig::IsConsentRequired()
+{
+	FString val = GetEnvOrCmdLine(TEXT("CONSENT_REQUIRED"));
+	if (val.IsEmpty())
+	{
+		return Get()->ConsentRequired;
+	}
+	if (val.Equals(TEXT("yes"), ESearchCase::IgnoreCase) == 0)
+		return true;
+	return false;
+}
+
 
 void FSentryClientModule::StartupModule()
 {
@@ -109,7 +121,8 @@ void FSentryClientModule::StartupModule()
 
 	SentryInit(*dsn,
 		env.IsEmpty() ? nullptr : *env,
-		rel.IsEmpty() ? nullptr : *rel
+		rel.IsEmpty() ? nullptr : *rel,
+		USentryClientConfig::IsConsentRequired()
 		);
 }
 
@@ -120,7 +133,7 @@ void FSentryClientModule::ShutdownModule()
 	SentryClose();
 }
 
-bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment, const TCHAR* Release)
+bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment, const TCHAR* Release, bool IsConsentRequired)
 {
 	if (initialized)
 		SentryClose();
@@ -167,6 +180,7 @@ bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment,
 	sentry_options_set_debug(options, 1);
 
 	// We want sentry to send the log with any crash
+	// TODO: make it possible to only add this with crashes, not other events?
 	FString logfile = FGenericPlatformOutputDevices::GetAbsoluteLogFilename();
 	logfile = FPaths::ConvertRelativePathToFull(logfile);
 #if PLATFORM_WINDOWS
@@ -174,6 +188,10 @@ bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment,
 #else
 	sentry_options_add_attachment(options, TCHAR_TO_UTF8(*logfile));
 #endif
+
+	// Consent handling
+	sentry_options_set_require_user_consent(options, IsConsentRequired);
+
 
 	// create a sentry transport
 	sentry_options_set_transport(options, FSentryTransport::New());

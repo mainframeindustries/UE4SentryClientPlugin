@@ -19,7 +19,7 @@ bool USentryBlueprintLibrary::IsInitialized()
 }
 
 
-bool USentryBlueprintLibrary::Initialize(const FString& DSN, const FString& Environment, const FString& Release)
+bool USentryBlueprintLibrary::Initialize(const FString& DSN, const FString& Environment, const FString& Release, bool IsConsentRequired)
 
 {
 	auto* module = FSentryClientModule::Get();
@@ -27,7 +27,8 @@ bool USentryBlueprintLibrary::Initialize(const FString& DSN, const FString& Envi
 	{
 		return module->SentryInit(*DSN,
 			Environment.IsEmpty() ? nullptr : *Environment,
-			Release.IsEmpty() ? nullptr : *Release
+			Release.IsEmpty() ? nullptr : *Release,
+			IsConsentRequired
 		);
 	}
 	return false;
@@ -46,7 +47,7 @@ void USentryBlueprintLibrary::Close()
 
 
 // Capture message
-void USentryBlueprintLibrary::CaptureMessage(SentryLevel level, const FString &logger, const FString &message)
+void USentryBlueprintLibrary::CaptureMessage(ESentryLevel level, const FString &logger, const FString &message)
 {
 	// sentry uses negative enums as well, weird.
 	sentry_level_t l = (sentry_level_t)((int)level - 1);
@@ -58,3 +59,36 @@ void USentryBlueprintLibrary::CaptureMessage(SentryLevel level, const FString &l
 		)
 	);
 }
+
+
+// Consent handling
+
+/**
+ * Get current state of user consent
+ */
+ESentryConsent USentryBlueprintLibrary::GetUserConsent()
+{
+	sentry_user_consent_t consent = sentry_user_consent_get();
+	// offset by one, because sentry uses -1 in its enums
+	return (ESentryConsent)((int)consent + 1);
+}
+
+/**
+ * Give user consent
+ */
+void USentryBlueprintLibrary::SetUserConsent(ESentryConsent Consent)
+{
+	switch (Consent)
+	{
+	case ESentryConsent::UNKNOWN:
+		sentry_user_consent_reset();
+		break;
+	case ESentryConsent::GIVEN:
+		sentry_user_consent_give();
+		break;
+	case ESentryConsent::REVOKED:
+		sentry_user_consent_revoke();
+		break;
+	}
+}
+

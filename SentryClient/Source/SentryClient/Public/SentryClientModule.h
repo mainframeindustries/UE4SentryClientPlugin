@@ -23,7 +23,7 @@ public:
 	virtual void ShutdownModule() override;
 
 
-	bool SentryInit(const TCHAR* DNS, const TCHAR* Environment, const TCHAR* Release);
+	bool SentryInit(const TCHAR* DNS, const TCHAR* Environment, const TCHAR* Release, bool IsConsentRequired);
 	void SentryClose();
 
 	// get the module if it exists
@@ -69,6 +69,9 @@ public:
 	UPROPERTY(Config);
 	FString Release;
 
+	UPROPERTY(Config);
+	bool ConsentRequired = false;
+
 
 	static FString GetEnvOrCmdLine(const TCHAR* name);
 
@@ -76,6 +79,7 @@ public:
 	static FString GetDSN();
 	static FString GetEnvironment();
 	static FString GetRelease();
+	static bool IsConsentRequired();
 
 	static USentryClientConfig* Get() { return CastChecked<USentryClientConfig>(USentryClientConfig::StaticClass()->GetDefaultObject()); }
 };
