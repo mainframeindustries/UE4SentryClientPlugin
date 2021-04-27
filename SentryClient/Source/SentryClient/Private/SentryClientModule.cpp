@@ -20,6 +20,8 @@ DEFINE_LOG_CATEGORY(LogSentryClient);
 DEFINE_LOG_CATEGORY(LogSentryCore);
 
 
+#define HAVE_CRASH_HANDLING_THING 1
+
 static void _SentryLog(sentry_level_t level, const char* message, va_list args, void* userdata)
 {
 	FSentryClientModule* module = static_cast<FSentryClientModule*>(userdata);
@@ -172,6 +174,11 @@ bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment,
 	if (!fail)
 	{
 		initialized = true;
+
+#if HAVE_CRASH_HANDLING_THING
+		// instruct UE not to try to do crash handling itself
+		FPlatformMisc::SetCrashHandling(ECrashHandlingType::Disabled);
+#endif
 	}
 	else
 	{
