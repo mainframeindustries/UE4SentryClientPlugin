@@ -10,6 +10,7 @@
 #include "Misc/Paths.h"
 #include "Misc/CommandLine.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
+#include "GenericPlatform/GenericPlatformOutputDevices.h"
 #include "Interfaces/IPluginManager.h"
 #include "Modules/ModuleManager.h"
 
@@ -164,6 +165,15 @@ bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment,
 	// setting debug means sentry will log to the provided logger
 	sentry_options_set_logger(options, _SentryLog, (void*)this);
 	sentry_options_set_debug(options, 1);
+
+	// We want sentry to send the log with any crash
+	FString logfile = FGenericPlatformOutputDevices::GetAbsoluteLogFilename();
+	logfile = FPaths::ConvertRelativePathToFull(logfile);
+#if PLATFORM_WINDOWS
+	sentry_options_add_attachmentw(options, *logfile);
+#else
+	sentry_options_add_attachment(options, TCHAR_TO_UTF8(*logfile));
+#endif
 
 	// create a sentry transport
 	sentry_options_set_transport(options, FSentryTransport::New());
