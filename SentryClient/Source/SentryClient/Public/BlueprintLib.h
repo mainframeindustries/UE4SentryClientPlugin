@@ -25,6 +25,12 @@ enum class ESentryConsent : uint8 {
 	REVOKED = 1,
 };
 
+UENUM(BlueprintType)
+enum class ESentryBreadcrumbType : uint8
+{
+	Default = 0,
+};
+
 UCLASS()
 class USentryBlueprintLibrary : public UBlueprintFunctionLibrary
 {
@@ -59,5 +65,53 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sentry|Consent")
 	static void SetUserConsent(ESentryConsent Consent);
 
+	
+	// User information
+	/**
+	 * Add information about the current user
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	static void SetUser(const FString &id, const FString &username, const FString &email);
+
+	/**
+	 * Clear information about the current user
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	static void ClearUser();
+
+
+	// Context information
+	/**
+	 * Add Context information
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	static void SetContext(const FString& key, const TMap<FString, FString> &Values);
+
+	/**
+	 * Clear information about the current user
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	static void ClearContext(const FString &key);
+
+	// Tag information information
+	/**
+	 * Add Tag
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	static void SetTag(const FString& key, const FString& Value);
+
+	/**
+	 * Remove a tag
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	static void RemoveTag(const FString& key);
+
+	/**
+	 * Breadcrumbs
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	static void AddStringBreadcrumb(ESentryBreadcrumbType type, const FString& message,
+		const FString& _category, const FString& level, const FString& StringData);
+		
 };
 

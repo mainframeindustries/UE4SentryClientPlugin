@@ -92,3 +92,88 @@ void USentryBlueprintLibrary::SetUserConsent(ESentryConsent Consent)
 	}
 }
 
+
+// User information
+
+void USentryBlueprintLibrary::SetUser(const FString& id, const FString& username, const FString& email)
+{
+	sentry_value_t user = sentry_value_new_object();
+	sentry_value_set_by_key(user, "ip_address", sentry_value_new_string("{{auto}}"));
+	if (!id.IsEmpty())
+	{
+		sentry_value_set_by_key(user, "id", sentry_value_new_string(TCHAR_TO_UTF8(*id)));
+	}
+	if (!username.IsEmpty())
+	{
+		sentry_value_set_by_key(user, "username", sentry_value_new_string(TCHAR_TO_UTF8(*username)));
+	}
+
+	if (!email.IsEmpty())
+	{
+		sentry_value_set_by_key(user, "email", sentry_value_new_string(TCHAR_TO_UTF8(*email)));
+	}
+	sentry_set_user(user);
+}
+
+void USentryBlueprintLibrary::ClearUser()
+{
+	sentry_remove_user();
+}
+
+
+// Context information
+void USentryBlueprintLibrary::SetContext(const FString& key, const TMap<FString, FString> &Values)
+{
+	sentry_value_t values = sentry_value_new_object();
+	for (auto& item : Values)
+	{
+		sentry_value_set_by_key(values, TCHAR_TO_UTF8(*item.Key), sentry_value_new_string(TCHAR_TO_UTF8(*item.Value)));
+	}
+	sentry_set_context(TCHAR_TO_UTF8(*key), values);
+}
+
+/**
+ * Clear information about the current user
+ */
+void USentryBlueprintLibrary::ClearContext(const FString& key)
+{
+	sentry_remove_context(TCHAR_TO_UTF8(*key));
+}
+
+
+// Tag handling
+
+void USentryBlueprintLibrary::SetTag(const FString& key, const FString& Value)
+{
+	sentry_set_tag(TCHAR_TO_UTF8(*key), TCHAR_TO_UTF8(*Value));
+}
+
+void USentryBlueprintLibrary::RemoveTag(const FString& key)
+{
+	sentry_remove_tag(TCHAR_TO_UTF8(*key));
+}
+
+// Breadcrumbs.  Currently support only "Default"
+void USentryBlueprintLibrary::AddStringBreadcrumb(ESentryBreadcrumbType type, const FString& message,
+	const FString& category, const FString& level, const FString& StringData)
+{
+	sentry_value_t crumb;
+	switch (type)
+	{
+	case ESentryBreadcrumbType::Default:
+		crumb = sentry_value_new_breadcrumb("default", TCHAR_TO_UTF8(*message));
+		break;
+	default:
+		return;
+	}
+	if (!category.IsEmpty())
+	{
+		sentry_value_set_by_key(crumb, "category", sentry_value_new_string(TCHAR_TO_UTF8(*category)));
+	}
+	if (!level.IsEmpty())
+	{
+		sentry_value_set_by_key(crumb, "level", sentry_value_new_string(TCHAR_TO_UTF8(*level)));
+	}
+	sentry_value_set_by_key(crumb, "data", sentry_value_new_string(TCHAR_TO_UTF8(*StringData)));
+	sentry_add_breadcrumb(crumb);
+}
