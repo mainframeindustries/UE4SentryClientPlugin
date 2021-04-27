@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "SentryClientModule.h"
+#include "SentryTransport.h"
 #include "Windows/AllowWindowsPlatformTypes.h"
 #define SENTRY_BUILD_STATIC 1 
 #include "sentry.h"
@@ -161,6 +162,9 @@ bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment,
 	// setting debug means sentry will log to the provided logger
 	sentry_options_set_logger(options, _SentryLog, (void*)this);
 	sentry_options_set_debug(options, 1);
+
+	// create a sentry transport
+	sentry_options_set_transport(options, FSentryTransport::New());
 
 	UE_LOG(LogSentryClient, Log, TEXT("Initializing with DSN '%s'"), 
 		DSN, Environment ? Environment : TEXT(""), Release ? Release : TEXT(""));

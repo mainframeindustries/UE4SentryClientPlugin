@@ -41,6 +41,7 @@ public class SentryClient : ModuleRules
 				//"SlateCore",
 				"Projects",
 				// ... add private dependencies that you statically link with here ...	
+				"HTTP",
 			}
 			);
 		
@@ -74,8 +75,9 @@ public class SentryClient : ModuleRules
 					"crashpad_zlib.lib",
 					"mini_chromium.lib",
 				};
-			PublicSystemLibraries.Add("winhttp.lib");
+			PublicSystemLibraries.Add("winhttp.lib"); // will go away
 			PublicSystemLibraries.Add("version.lib");
+			PublicSystemLibraries.Add("dbghelp.lib");
 			RuntimeDependencies.Add(Path.Combine(SentryPlatform, "bin", "crashpad_handler.exe"));
 		}
 		else if (Target.Platform == UnrealTargetPlatform.Linux)
