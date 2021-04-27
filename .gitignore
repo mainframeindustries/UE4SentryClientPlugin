@@ -82,6 +82,10 @@ Binaries/
 sentry-native-release/
 
 # allow all the third party built binaries
-!sentry-native/
+!**/sentry-native/**/*.pdb
+!**/sentry-native/**/*.exe
+!**/sentry-native/**/*.lib
+
+
 # but ignore any cmake artifacts in there
 **/sentry-native/**/*.cmake
