@@ -85,6 +85,7 @@ sentry-native-release/
 !**/sentry-native/**/*.pdb
 !**/sentry-native/**/*.exe
 !**/sentry-native/**/*.lib
+!**/sentry-native/**/*.a
 
 
 # but ignore any cmake artifacts in there
