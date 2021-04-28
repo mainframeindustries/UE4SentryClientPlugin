@@ -11,11 +11,11 @@
 	"EngineVersion":  "4.26",
 	"MarketplaceURL": "",
 	"SupportURL": "",
-	"CanContainContent": true,
-	"IsBetaVersion": true,
-	"IsExperimentalVersion": true,
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
 	"Installed": false,
-	"SupportedTargetPlatforms":  ["Win64"],
+	"SupportedTargetPlatforms":  ["Win64", "Linux"],
 	"Modules": [
 		{
 			"Name": "SentryClient",

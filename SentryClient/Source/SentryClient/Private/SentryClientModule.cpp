@@ -2,10 +2,14 @@
 
 #include "SentryClientModule.h"
 #include "SentryTransport.h"
+
+#if PLATFORM_WINDOWS
 #include "Windows/AllowWindowsPlatformTypes.h"
-#define SENTRY_BUILD_STATIC 1 
+#endif
 #include "sentry.h"
+#if PLATFORM_WINDOWS
 #include "Windows/HideWindowsPlatformTypes.h"
+#endif
 
 #include "Misc/Paths.h"
 #include "Misc/CommandLine.h"
@@ -148,7 +152,11 @@ bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment,
 		dbPath = FPaths::ConvertRelativePathToFull(dbPath);
 	}
 
+#if PLATFORM_WINDOWS
 	sentry_options_set_database_pathw(options, *dbPath);
+#else
+	sentry_options_set_database_path(options, TCHAR_TO_UTF8(*dbPath));
+#endif
 
 	// Location of the crashpad_backend.exe on windows
 	// This must match the SentryClient.build.cs paths

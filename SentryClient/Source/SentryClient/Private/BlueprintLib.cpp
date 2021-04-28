@@ -2,10 +2,13 @@
 
 #include "BlueprintLib.h"
 
+#if PLATFORM_WINDOWS
 #include "Windows/AllowWindowsPlatformTypes.h"
-#define SENTRY_BUILD_STATIC 1 
+#endif
 #include "sentry.h"
+#if PLATFORM_WINDOWS
 #include "Windows/HideWindowsPlatformTypes.h"
+#endif
 
 
 bool USentryBlueprintLibrary::IsInitialized()

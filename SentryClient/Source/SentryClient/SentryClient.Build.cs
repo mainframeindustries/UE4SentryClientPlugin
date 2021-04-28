@@ -8,6 +8,7 @@ public class SentryClient : ModuleRules
 	public SentryClient(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+		bEnforceIWYU = true;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
@@ -57,7 +58,7 @@ public class SentryClient : ModuleRules
 		string SentryRoot = Path.Combine(ModuleDirectory, "../ThirdParty/sentry-native");
 		string SentryPlatform="";
 		string[] SentryLibs = { };
-		
+
 		if (Target.Platform == UnrealTargetPlatform.Win64)
 		{
 			SentryPlatform = Path.Combine(SentryRoot, "Win64");
@@ -82,7 +83,12 @@ public class SentryClient : ModuleRules
 		else if (Target.Platform == UnrealTargetPlatform.Linux)
 		{
 			SentryPlatform = Path.Combine(SentryRoot, "Linux");
-			//ryLib = "libsentry.a";
+			SentryLibs =
+				new string[]
+				{
+					"libsentry.a",
+					"libbreakpad_client.a",
+				};
 		}
 		else
         {
@@ -91,6 +97,9 @@ public class SentryClient : ModuleRules
 
 		// anyone including this library can use the sentry api
 		PublicIncludePaths.Add(Path.Combine(SentryPlatform, "include"));
+		// sentry header file needs thef following since we use static libs
+		PublicDefinitions.Add("SENTRY_BUILD_STATIC=1");
+
 		foreach (string lib in SentryLibs) {
 			PublicAdditionalLibraries.Add(Path.Combine(SentryPlatform, "lib", lib));
 		}
