@@ -1,9 +1,14 @@
 #pragma once
-
+#include "SentryClientModule.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
-#include "SentryClientModule.h"
-
+#if PLATFORM_WINDOWS
+#include "Windows/AllowWindowsPlatformTypes.h"
+#endif
+#include "sentry.h"
+#if PLATFORM_WINDOWS
+#include "Windows/HideWindowsPlatformTypes.h"
+#endif
 #include "BlueprintLib.generated.h"
 
 
@@ -11,24 +16,33 @@
 
 UENUM(BlueprintType)
 enum class ESentryLevel : uint8 {
-	DEBUG = 0,
-	INFO = 1  UMETA(DisplayName = "INFO"),
-	WARNING = 2  UMETA(DisplayName = "WARNING"),
-	ERROR = 3  UMETA(DisplayName = "ERROR"),
-	FATAL = 4  UMETA(DisplayName = "FATAL"),
+	SENTRY_DEBUG = 0,
+	SENTRY_INFO = 1  UMETA(DisplayName = "Info"),
+	SENTRY_WARNING = 2  UMETA(DisplayName = "Warning"),
+	SENTRY_ERROR = 3  UMETA(DisplayName = "Error"),
+	SENTRY_FATAL = 4  UMETA(DisplayName = "Fatal"),
 };
 
 UENUM(BlueprintType)
 enum class ESentryConsent : uint8 {
-	UNKNOWN = 0,
-	GIVEN = 2,
-	REVOKED = 1,
+	UNKNOWN = 0 UMETA(DisplayName = "Unknown"),
+	GIVEN = 2 UMETA(DisplayName = "Given"),
+	REVOKED = 1 UMETA(DisplayName = "Revoked"),
 };
 
 UENUM(BlueprintType)
 enum class ESentryBreadcrumbType : uint8
 {
 	Default = 0,
+	Debug,
+	Error,
+	Navigation,
+	Http,
+	Info,
+	Query,
+	Transaction,
+	Ui,
+	User,
 };
 
 UCLASS()
@@ -49,7 +63,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sentry")
 	static void Close();
 
-	// Capture message
+	/** Capture message
+	 * See https://docs.sentry.io/platforms/native/usage/
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Sentry|Event")
 	static void CaptureMessage(ESentryLevel level, const FString &logger, const FString &message);
 
@@ -69,49 +85,74 @@ public:
 	// User information
 	/**
 	 * Add information about the current user
+	 * see https://docs.sentry.io/platforms/native/enriching-events/identify-user/
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	UFUNCTION(BlueprintCallable, Category = "Sentry|User")
 	static void SetUser(const FString &id, const FString &username, const FString &email);
 
 	/**
 	 * Clear information about the current user
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	UFUNCTION(BlueprintCallable, Category = "Sentry|User")
 	static void ClearUser();
 
 
 	// Context information
 	/**
 	 * Add Context information
+	 * See https://docs.sentry.io/platforms/native/enriching-events/context/
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Context")
 	static void SetContext(const FString& key, const TMap<FString, FString> &Values);
 
 	/**
 	 * Clear information about the current user
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Context")
 	static void ClearContext(const FString &key);
 
 	// Tag information information
 	/**
 	 * Add Tag
+	 * See https://docs.sentry.io/platforms/native/enriching-events/tags/
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Tag")
 	static void SetTag(const FString& key, const FString& Value);
 
 	/**
 	 * Remove a tag
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Tag")
 	static void RemoveTag(const FString& key);
 
 	/**
-	 * Breadcrumbs
+	 * Add a breacrumb
+	 * See https://docs.sentry.io/platforms/native/enriching-events/breadcrumbs/
+	 * and https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/#breadcrumb-types
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Breadcrumb")
+	static void AddBreadcrumb(ESentryBreadcrumbType type, const FString& message,
+	const FString& _category, const FString& level);
+	/**
+	 * Add a breacrumb with a String as "data"
+	 * See https://docs.sentry.io/platforms/native/enriching-events/breadcrumbs/
+	 * and https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/#breadcrumb-types
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Breadcrumb")
 	static void AddStringBreadcrumb(ESentryBreadcrumbType type, const FString& message,
 		const FString& _category, const FString& level, const FString& StringData);
+	/**
+	 * Add a breacrumb with a String as "data"
+	 * See https://docs.sentry.io/platforms/native/enriching-events/breadcrumbs/
+	 * and https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/#breadcrumb-types
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Breadcrumb")
+	static void AddMapBreadcrumb(ESentryBreadcrumbType type, const FString& message,
+	const FString& _category, const FString& level, const TMap<FString, FString>& MapData);
 		
+
+	// helper function
+	static sentry_value_t BreadCrumb(ESentryBreadcrumbType type, const FString& message,
+		const FString& _category, const FString& level);
 };
 

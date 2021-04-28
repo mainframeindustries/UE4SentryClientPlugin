@@ -2,13 +2,6 @@
 
 #include "BlueprintLib.h"
 
-#if PLATFORM_WINDOWS
-#include "Windows/AllowWindowsPlatformTypes.h"
-#endif
-#include "sentry.h"
-#if PLATFORM_WINDOWS
-#include "Windows/HideWindowsPlatformTypes.h"
-#endif
 
 
 bool USentryBlueprintLibrary::IsInitialized()
@@ -157,18 +150,76 @@ void USentryBlueprintLibrary::RemoveTag(const FString& key)
 }
 
 // Breadcrumbs.  Currently support only "Default"
+void USentryBlueprintLibrary::AddBreadcrumb(ESentryBreadcrumbType type, const FString& message,
+	const FString& category, const FString& level)
+{
+	sentry_value_t crumb = BreadCrumb(type, message, category, level);
+	sentry_add_breadcrumb(crumb);
+}
+
+// Breadcrumbs.  Currently support only "Default"
 void USentryBlueprintLibrary::AddStringBreadcrumb(ESentryBreadcrumbType type, const FString& message,
 	const FString& category, const FString& level, const FString& StringData)
 {
+	sentry_value_t crumb = BreadCrumb(type, message, category, level);
+	sentry_value_set_by_key(crumb, "data", sentry_value_new_string(TCHAR_TO_UTF8(*StringData)));
+	sentry_add_breadcrumb(crumb);
+}
+
+// Breadcrumbs.  Currently support only "Default"
+void USentryBlueprintLibrary::AddMapBreadcrumb(ESentryBreadcrumbType type, const FString& message,
+	const FString& category, const FString& level, const TMap<FString, FString>& MapData)
+{
+	sentry_value_t crumb = BreadCrumb(type, message, category, level);
+	sentry_value_t data = sentry_value_new_object();
+	for(const auto &pair : MapData)
+	{ 
+		sentry_value_set_by_key(data, TCHAR_TO_UTF8(*pair.Key), sentry_value_new_string(TCHAR_TO_UTF8(*pair.Value)));
+	}
+	sentry_value_set_by_key(crumb, "data", data);
+	sentry_add_breadcrumb(crumb);
+}
+
+sentry_value_t USentryBlueprintLibrary::BreadCrumb(ESentryBreadcrumbType type, const FString& message,
+	const FString& category, const FString& level)
+{
 	sentry_value_t crumb;
+	const ANSICHAR* ctype = "default";
 	switch (type)
 	{
 	case ESentryBreadcrumbType::Default:
-		crumb = sentry_value_new_breadcrumb("default", TCHAR_TO_UTF8(*message));
+		ctype = "default";
 		break;
-	default:
-		return;
+	case ESentryBreadcrumbType::Debug:
+		ctype = "debug";
+		break;
+	case ESentryBreadcrumbType::Error:
+		ctype = "error";
+		break;
+	case ESentryBreadcrumbType::Navigation:
+		ctype = "navigation";
+		break;
+	case ESentryBreadcrumbType::Http:
+		ctype = "http";
+		break;
+	case ESentryBreadcrumbType::Info:
+		ctype = "info";
+		break;
+	case ESentryBreadcrumbType::Query:
+		ctype = "query";
+		break;
+	case ESentryBreadcrumbType::Transaction:
+		ctype = "transaction";
+		break;
+	case ESentryBreadcrumbType::Ui:
+		ctype = "ui";
+		break;
+	case ESentryBreadcrumbType::User:
+		ctype = "user";
+		break;
 	}
+
+	crumb = sentry_value_new_breadcrumb(ctype, TCHAR_TO_UTF8(*message));
 	if (!category.IsEmpty())
 	{
 		sentry_value_set_by_key(crumb, "category", sentry_value_new_string(TCHAR_TO_UTF8(*category)));
@@ -177,6 +228,5 @@ void USentryBlueprintLibrary::AddStringBreadcrumb(ESentryBreadcrumbType type, co
 	{
 		sentry_value_set_by_key(crumb, "level", sentry_value_new_string(TCHAR_TO_UTF8(*level)));
 	}
-	sentry_value_set_by_key(crumb, "data", sentry_value_new_string(TCHAR_TO_UTF8(*StringData)));
-	sentry_add_breadcrumb(crumb);
+	return crumb;
 }
