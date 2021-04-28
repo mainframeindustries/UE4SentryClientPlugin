@@ -1,21 +1,24 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0",
+	"VersionName": "0.1",
 	"FriendlyName": "SentryClient",
 	"Description": "A plugin for the Sentry native sdk",
 	"Category": "Other",
-	"CreatedBy": "",
-	"CreatedByURL": "",
+	"CreatedBy": "Mainframe Industries",
+	"CreatedByURL": "https://themainframe.com",
 	"DocsURL": "",
-	"EngineVersion":  "4.26",
 	"MarketplaceURL": "",
 	"SupportURL": "",
+	"EngineVersion": "4.26",
 	"CanContainContent": false,
-	"IsBetaVersion": false,
+	"IsBetaVersion": true,
 	"IsExperimentalVersion": false,
 	"Installed": false,
-	"SupportedTargetPlatforms":  ["Win64", "Linux"],
+	"SupportedTargetPlatforms": [
+		"Win64",
+		"Linux"
+	],
 	"Modules": [
 		{
 			"Name": "SentryClient",
