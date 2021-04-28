@@ -2,6 +2,33 @@
 An UnrealEngine plugin for the Sentry crash reporting service
 
 
+# Sentry plugin for the sentry-native sdk
+This plugin implements crash handling using sentry.  It also exposes blueprint functions to communicate
+with the nattive sdk
+
+## Configuration
+the usual environment varialbes such as `SENTRY_DSN` can be used.  In addition
+command line flags can be used, such as -SENTRY_DSN=https://foo
+An .ini file can be used as well.  The priority is (lowest to highest):
+- Builtin values
+- .ini file
+- Env var
+- command line flag.
+
+The .ini file is  DefaultSentry.ini (or other Sentry.ini files according to the usual platform/role precedence
+of UE4 ini files) under the key following key:
+```
+[/Script/SentryClient.SentryClientConfig]
+DSN=https://YOUR_KEY@oORG_ID.ingest.sentry.io/PROJECT_ID
+Release=v.0.1.9
+```
+
+##  Note:
+For crash handling on windows, the Unreal Engine mush have a certain patch to disable the
+Windows native Structured Execption Handling hooks that UE uses.  There is a Pull Request
+active with Epic games for this (https://github.com/EpicGames/UnrealEngine/pull/7976)
+
+
 
 ## Updating the sentry-native binaries
 1. Get the latest release from https://github.com/getsentry/sentry-native
