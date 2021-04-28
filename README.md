@@ -27,8 +27,11 @@ We also provide a transport, using http, so we use the `none` transport.
 This follows much the same steps as above, except that the `install` folder should be `Linux` instead of `Win64`
 You need a minimum version of `CMake 3.12` for this to work.  In case of problems running the first
 step, try upgrading cmake.
-1. Install prerequisites, zlib-dev, and libssl-dev
-2. Run `cmake -B build-linux -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none`
+1. Install compilation prerequisites, such as `build-essential` along with other libs: `zlib-dev`,`libssl-dev`, `libc++-dev`,
+   `libc++abi-dev`, `clang`
+2. Run `cmake -B build-linux -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none  
+       -DCMAKE__COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ 
+       -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-stdlib=libc++"`
 3. Run `cmake --build build-linux --config RelWithDebInfo --parallel`
 4. Run `cmake --install build-linux --prefix Linux --config RelWithDebInfo`
 5. Copy the `Linux` folder into the `SentryClient/Source/ThirdParty/sentry-native` folder
