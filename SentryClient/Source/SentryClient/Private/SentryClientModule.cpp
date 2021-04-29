@@ -25,7 +25,7 @@ DEFINE_LOG_CATEGORY(LogSentryClient);
 DEFINE_LOG_CATEGORY(LogSentryCore);
 
 
-#define HAVE_CRASH_HANDLING_THING 1
+#define HAVE_CRASH_HANDLING_THING 0
 
 static void _SentryLog(sentry_level_t level, const char* message, va_list args, void* userdata)
 {

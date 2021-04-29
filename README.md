@@ -27,6 +27,8 @@ Release=v.0.1.9
 For crash handling on windows, the Unreal Engine mush have a certain patch to disable the
 Windows native Structured Execption Handling hooks that UE uses.  There is a Pull Request
 active with Epic games for this (https://github.com/EpicGames/UnrealEngine/pull/7976)
+If your engine is patched in that way, you can  `#define HAVE_CRASH_HANDLING_THING 1`
+in the file `SentryClientModule.cpp`
 
 
 
