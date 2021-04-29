@@ -31,34 +31,43 @@ active with Epic games for this (https://github.com/EpicGames/UnrealEngine/pull/
 
 
 ## Updating the sentry-native binaries
-1. Get the latest release from https://github.com/getsentry/sentry-native
-2. Unzip the contents into `SentryClient/Source/ThirdParty/sentry-native-release`
-3. Build a release in there, for each platform (see below)
-4. Copy the platform specific folder in to `SentryClient/Source/ThirdParty/sentry-native/`, e.g. `Win64` or `Linux`
 
+The sentry-native sdk is a submodule at `SentryClient/Source/ThirdParty/sentry-native`.
+The binaries and header are built from this and placed in `SentryClient/Binaries/ThirdParty/sentry-native`.
+
+- You may want to update the submodule to a new release tag.  Be sure to update the submodule
+  and initialize all submodules recursively.
+- You now need to rebuild the binaries and install the sdks in the proper folder.
+  - Follow the instructions for each platform below
+  - _install_ to the proper place, e.g. `SentryClient/Binaries/ThirdParty/sentry-native/Win64`
+
+The sentry-native SDK uses CMake and this needs to be installed, along with any necessary platform
+build tools and dependencies, mentioned below.
+
+We build the static version of the sdk, with `none` transport, since the plugin provides
+its own http transport via the unreal engine.
 
 ### Building for Windows
 We must use the `RelWithDebInfo` configuration because the `Debug` configuration links with
 the Debug windows CRT, which is incompatible with UE.
-We also provide a transport, using http, so we use the `none` transport.
 
 1. Install cmake, e.g. using `choco install cmake` (see https://chocolatey.org/ for the choco installer)
-2. Open a command shell and enter the `sentry-native-release` folder, or wherever you placed your library.
+2. Open a command shell and enter the `SentryClinet/Source/ThirdParty/sentry-native` folder
 3. Delete any pre-existing `build` folder
 4. Run `cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none` to configure cmake
 6. Run `cmake --build build --config RelWithDebInfo` to build the binaries (do not specify --parallel, it will only build the `Debug` config)
-7. Run `cmake --install build --prefix Win64 --config RelWithDebInfo` to create an install folder
-8. Copy the `Win64` folder into the `SentryClient/Source/ThirdParty/sentry-native` folder
+7. Run `cmake --install build --prefix ../../../Binaries/ThirdParty/sentry-native/Win64 --config RelWithDebInfo`
 
 ### Building for Linux
 This follows much the same steps as above, except that the `install` folder should be `Linux` instead of `Win64`
 You need a minimum version of `CMake 3.12` for this to work.  In case of problems running the first
 step, try upgrading cmake.
 1. Install compilation prerequisites, such as `build-essential` along with other libs: `zlib-dev`,`libssl-dev`, `libc++-dev`,
-   `libc++abi-dev`, `clang`
+   `libc++abi-dev`, `clang`.  This varies according to your distro.
+2. `cd` to `SentryClinet/Source/ThirdParty/sentry-native`
+3. Delete any pre-existing `build-linux` folder
 2. Run `cmake -B build-linux -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none  
-       -DCMAKE__COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ 
+       -DCMAKE__COMPILER=clang -DCMAKE_CXX_COMPILER="clang++"
        -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-stdlib=libc++"`
 3. Run `cmake --build build-linux --config RelWithDebInfo --parallel`
-4. Run `cmake --install build-linux --prefix Linux --config RelWithDebInfo`
-5. Copy the `Linux` folder into the `SentryClient/Source/ThirdParty/sentry-native` folder
+4. Run `cmake --install build-linux --prefix ../../../Binaries/ThirdParty/sentry-native/Linux --config RelWithDebInfo`
