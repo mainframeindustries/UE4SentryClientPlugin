@@ -54,8 +54,8 @@ public class SentryClient : ModuleRules
 			}
 			);
 
-		// The include path
-		string SentryRoot = Path.Combine(ModuleDirectory, "../ThirdParty/sentry-native");
+		// The root part of the installed sdk (includes/binaries)
+		string SentryRoot = Path.Combine(PluginDirectory, "Binaries/ThirdParty/sentry-native");
 		string SentryPlatform="";
 		string[] SentryLibs = { };
 
