@@ -90,6 +90,12 @@ bool USentryClientConfig::IsConsentRequired()
 	}
 	if (val.Equals(TEXT("yes"), ESearchCase::IgnoreCase) == 0)
 		return true;
+	if (val.Equals(TEXT("1"), ESearchCase::IgnoreCase) == 0)
+		return true;
+	if (val.Equals(TEXT("true"), ESearchCase::IgnoreCase) == 0)
+		return true;
+	if (val.Equals(TEXT("on"), ESearchCase::IgnoreCase) == 0)
+		return true;
 	return false;
 }
 

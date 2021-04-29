@@ -23,6 +23,24 @@ DSN=https://YOUR_KEY@oORG_ID.ingest.sentry.io/PROJECT_ID
 Release=v.0.1.9
 ```
 
+The current list of config keys:
+| .ini file         | Environment variable      | Command line flag          |
+|-------------------|---------------------------|----------------------------|
+| `DSN`             | `SENTRY_DSN`              | `-SENTRY_DSN`              |
+| `Environment`     | `SENTRY_ENVIRONMENT`      | `-SENTRY_ENVIRONMENT`      |
+| `Release`         | `SENTRY_RELEASE`          | `-SENTRY_RELEASE`          |
+|`ConsentRequired`  |`SENTRY_CONSENT_REQUIRED`  | `-SENTRY_CONSENT_REQUIRED` |
+
+All take a value, such as
+```sh
+export SENTRY_RELEASE=GoldMaster3000
+```
+or
+```sh
+SuperDuperGame.exe -SENTRY_ENVIRONMENT=TENTATIVE_DEBUG -SENTRY_CONSENT_REQUIRED=1
+```
+
+
 ##  Note:
 For crash handling on windows, the Unreal Engine mush have a certain patch to disable the
 Windows native Structured Execption Handling hooks that UE uses.  There is a Pull Request
