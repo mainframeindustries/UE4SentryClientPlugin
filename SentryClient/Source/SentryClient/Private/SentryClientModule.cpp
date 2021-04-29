@@ -164,7 +164,7 @@ bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment,
 		auto Plugin = IPluginManager::Get().FindPlugin(SENTRY_PLUGIN_NAME);
 		FString BaseDir = Plugin->GetBaseDir();
 		CrashPadLocation = FPaths::Combine(BaseDir,
-			TEXT("Source/ThirdParty/sentry-native/Win64/bin/crashpad_handler.exe")
+			TEXT("Binaries/ThirdParty/sentry-native/Win64/bin/crashpad_handler.exe")
 			);
 		CrashPadLocation = FPaths::ConvertRelativePathToFull(CrashPadLocation);
 	}
