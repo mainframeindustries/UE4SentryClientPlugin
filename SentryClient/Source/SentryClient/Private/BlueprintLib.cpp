@@ -1,7 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #include "BlueprintLib.h"
-
 
 
 bool USentryBlueprintLibrary::IsInitialized()
