@@ -1,14 +1,14 @@
 # UE4SentryClientPlugin
-An UnrealEngine plugin for the Sentry crash reporting service
-
+An UnrealEngine plugin for the Sentry crash reporting service (https://github.com/getsentry/sentry-native)
 
 # Sentry plugin for the sentry-native sdk
 This plugin implements crash handling using sentry.  It also exposes blueprint functions to communicate
-with the nattive sdk
+with the native sdk 
 
 ## Configuration
-the usual environment varialbes such as `SENTRY_DSN` can be used.  In addition
+the usual environment variables such as `SENTRY_DSN` can be used.  In addition
 command line flags can be used, such as -SENTRY_DSN=https://foo
+
 An .ini file can be used as well.  The priority is (lowest to highest):
 - Builtin values
 - .ini file
@@ -29,7 +29,7 @@ The current list of config keys:
 | `DSN`             | `SENTRY_DSN`              | `-SENTRY_DSN`              |
 | `Environment`     | `SENTRY_ENVIRONMENT`      | `-SENTRY_ENVIRONMENT`      |
 | `Release`         | `SENTRY_RELEASE`          | `-SENTRY_RELEASE`          |
-|`ConsentRequired`  |`SENTRY_CONSENT_REQUIRED`  | `-SENTRY_CONSENT_REQUIRED` |
+|`ConsentRequired`  | `SENTRY_CONSENT_REQUIRED` | `-SENTRY_CONSENT_REQUIRED` |
 
 All take a value, such as
 ```sh
@@ -40,7 +40,6 @@ or
 SuperDuperGame.exe -SENTRY_ENVIRONMENT=TENTATIVE_DEBUG -SENTRY_CONSENT_REQUIRED=1
 ```
 
-
 ##  Note:
 For crash handling on windows, the Unreal Engine mush have a certain patch to disable the
 Windows native Structured Execption Handling hooks that UE uses.  There is a Pull Request
@@ -48,10 +47,7 @@ active with Epic games for this (https://github.com/EpicGames/UnrealEngine/pull/
 If your engine is patched in that way, you can  `#define HAVE_CRASH_HANDLING_THING 1`
 in the file `SentryClientModule.cpp`
 
-
-
 ## Updating the sentry-native binaries
-
 The sentry-native sdk is a submodule at `SentryClient/Source/ThirdParty/sentry-native`.
 The binaries and header are built from this and placed in `SentryClient/Binaries/ThirdParty/sentry-native`.
 
