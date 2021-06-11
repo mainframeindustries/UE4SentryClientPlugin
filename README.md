@@ -19,8 +19,8 @@ The .ini file is  DefaultSentry.ini (or other Sentry.ini files according to the 
 of UE4 ini files) under the key following key:
 ```
 [/Script/SentryClient.SentryClientConfig]
-DSN=https://YOUR_KEY@oORG_ID.ingest.sentry.io/PROJECT_ID
-Release=v.0.1.9
+DSN="https://YOUR_KEY@oORG_ID.ingest.sentry.io/PROJECT_ID"
+Release="v.0.1.9"
 ```
 
 The current list of config keys:
@@ -65,12 +65,12 @@ its own http transport via the unreal engine.
 
 ### Building for Windows
 We must use the `RelWithDebInfo` configuration because the `Debug` configuration links with
-the Debug windows CRT, which is incompatible with UE.
+the Debug windows CRT, which is incompatible with UE. UnrealEngine 4.26 uses VisualStudio 2017 as the official code generator.  Newer versions of VisualStudio create code that cannot be linked with an engine built with 2017.
 
 1. Install cmake, e.g. using `choco install cmake` (see https://chocolatey.org/ for the choco installer)
 2. Open a command shell and enter the `SentryClient/Source/ThirdParty/sentry-native` folder
 3. Delete any pre-existing `build` folder
-4. Run `cmake -G "Visual Studio 15 2017 x64" -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none` to configure cmake
+4. Run `cmake -G "Visual Studio 15 2017 Win64" -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none` to configure cmake
 6. Run `cmake --build build --config RelWithDebInfo` to build the binaries (do not specify --parallel, it will only build the `Debug` config)
 7. Run `cmake --install build --prefix ../../../Binaries/ThirdParty/sentry-native/Win64 --config RelWithDebInfo`
 
