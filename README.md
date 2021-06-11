@@ -68,9 +68,9 @@ We must use the `RelWithDebInfo` configuration because the `Debug` configuration
 the Debug windows CRT, which is incompatible with UE.
 
 1. Install cmake, e.g. using `choco install cmake` (see https://chocolatey.org/ for the choco installer)
-2. Open a command shell and enter the `SentryClinet/Source/ThirdParty/sentry-native` folder
+2. Open a command shell and enter the `SentryClient/Source/ThirdParty/sentry-native` folder
 3. Delete any pre-existing `build` folder
-4. Run `cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none` to configure cmake
+4. Run `cmake -G "Visual Studio 15 2017 x64" -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none` to configure cmake
 6. Run `cmake --build build --config RelWithDebInfo` to build the binaries (do not specify --parallel, it will only build the `Debug` config)
 7. Run `cmake --install build --prefix ../../../Binaries/ThirdParty/sentry-native/Win64 --config RelWithDebInfo`
 
