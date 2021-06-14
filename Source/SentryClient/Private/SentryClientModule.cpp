@@ -15,6 +15,10 @@
 #include "GenericPlatform/GenericPlatformOutputDevices.h"
 #include "Interfaces/IPluginManager.h"
 #include "Modules/ModuleManager.h"
+#include "Kismet/KismetSystemLibrary.h"  // for user name
+#include "GenericPlatform/GenericPlatformProcess.h"	// for hostname
+
+#include "BlueprintLib.h"
 
 
 #define LOCTEXT_NAMESPACE "FSentryClientModule"
@@ -127,11 +131,17 @@ void FSentryClientModule::StartupModule()
 	FString env = USentryClientConfig::GetEnvironment();
 	FString rel = USentryClientConfig::GetRelease();
 
-	SentryInit(*dsn,
+	bool init = SentryInit(*dsn,
 		env.IsEmpty() ? nullptr : *env,
 		rel.IsEmpty() ? nullptr : *rel,
 		USentryClientConfig::IsConsentRequired()
-		);
+	);
+	if (init)
+	{
+		// Set some default information (username, hostname)
+		USentryBlueprintLibrary::SetUser(FString(), UKismetSystemLibrary::GetPlatformUserName(), FString());
+		USentryBlueprintLibrary::SetTag(TEXT("hostname"), FPlatformProcess::ComputerName());
+	}
 }
 
 void FSentryClientModule::ShutdownModule()
