@@ -35,6 +35,21 @@ static void _SentryLog(sentry_level_t level, const char* message, va_list args, 
 	module->SentryLog((int)level, message, args);
 }
 
+static sentry_value_t SentryEventFunction(sentry_value_t event, void* hint, void* closure)
+{
+	// Some code from WindowsCrashHandlingContext.cpp
+	// 
+	// Then try run time crash processing and broadcast information about a crash.
+	FCoreDelegates::OnHandleSystemError.Broadcast();
+
+	if (GLog)
+	{
+		//Panic flush the logs to make sure there are no entries queued. This is
+		//not thread safe so it will skip for example editor log.
+		GLog->PanicFlushThreadedLogs();
+	}
+	return event;
+}
 
 FString USentryClientConfig::GetEnvOrCmdLine(const TCHAR* name)
 {
@@ -217,6 +232,11 @@ bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment,
 
 	// create a sentry transport
 	sentry_options_set_transport(options, FSentryTransport::New());
+
+	// Set a before-send-callback, to flush logging
+	sentry_options_set_before_send(options, &SentryEventFunction, (void*)this);
+
+	// Todo: set up a thing to add log breadcrumbs
 
 	UE_LOG(LogSentryClient, Log, TEXT("Initializing with DSN '%s'"), 
 		DSN, Environment ? Environment : TEXT(""), Release ? Release : TEXT(""));
