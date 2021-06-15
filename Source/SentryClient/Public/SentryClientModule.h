@@ -3,6 +3,14 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
+#if PLATFORM_WINDOWS
+#include "Windows/AllowWindowsPlatformTypes.h"
+#endif
+#include "sentry.h"
+#if PLATFORM_WINDOWS
+#include "Windows/HideWindowsPlatformTypes.h"
+#endif
+
 #include "SentryClientModule.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogSentryClient, Log, All);
@@ -11,6 +19,30 @@ DECLARE_LOG_CATEGORY_EXTERN(LogSentryCore, Log, All);
 // use this to figure out the plugin folder at runtime.
 // if the name of this plugin changes, it needs to be reflected here.
 #define SENTRY_PLUGIN_NAME "SentryClient"
+
+class FSentryClientModule;
+
+// Class for binding to the GLog and funneling messages .
+class FSentryOutputDevice : public FOutputDevice
+{
+public:
+	FSentryOutputDevice(FSentryClientModule* _module) : module(_module) {}
+
+	// Sentry handler is thread safe
+	virtual bool CanBeUsedOnAnyThread() const
+	{
+		return true;
+	}
+	virtual bool CanBeUsedOnMultipleThreads() const
+	{
+		return true;
+	}
+
+	// Serialize, which runs on tick, and notifies if a new message has been created.
+	virtual void Serialize(const TCHAR* V, ELogVerbosity::Type Verbosity, const class FName& Category) override;
+private:
+	FSentryClientModule* module;
+};
 
 class FSentryClientModule : public IModuleInterface
 {
@@ -30,10 +62,15 @@ public:
 
 	static void SentryLog(int level, const char* message, va_list args);
 
+	ELogVerbosity::Type GetVerbosity() const { return Verbosity; }
+	void SetVerbosity(ELogVerbosity::Type _Verbosity) { Verbosity = _Verbosity; }
+
 private:
 	bool initialized = false;
 	FString dbPath;
 	FString CrashPadLocation;
+	TSharedPtr<FSentryOutputDevice> LogDevice;
+	ELogVerbosity::Type Verbosity = ELogVerbosity::Warning;  // only report warnings or worse as breadcrumbs
 };
 
 

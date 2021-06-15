@@ -27,6 +27,15 @@ bool USentryBlueprintLibrary::Initialize(const FString& DSN, const FString& Envi
 	return false;
 }
 
+void USentryBlueprintLibrary::SetVerbosity(ESentryVerbosity Verbosity)
+{
+	auto* module = FSentryClientModule::Get();
+	if (module)
+	{
+		module->SetVerbosity((ELogVerbosity::Type)Verbosity);
+	}
+}
+
 
 void USentryBlueprintLibrary::Close()
 

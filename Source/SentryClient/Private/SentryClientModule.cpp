@@ -1,13 +1,7 @@
 #include "SentryClientModule.h"
 #include "SentryTransport.h"
 
-#if PLATFORM_WINDOWS
-#include "Windows/AllowWindowsPlatformTypes.h"
-#endif
-#include "sentry.h"
-#if PLATFORM_WINDOWS
-#include "Windows/HideWindowsPlatformTypes.h"
-#endif
+
 
 #include "Misc/Paths.h"
 #include "Misc/CommandLine.h"
@@ -28,6 +22,48 @@ DEFINE_LOG_CATEGORY(LogSentryCore);
 
 
 #define HAVE_CRASH_HANDLING_THING 0
+void FSentryOutputDevice::Serialize(const TCHAR* V, ELogVerbosity::Type Verbosity, const class FName& Category)
+{
+
+	// do nothing if this is a too-high verbosity message
+	if (Verbosity > module->GetVerbosity())
+	{
+		return;
+	}
+
+	auto crumb = sentry_value_new_breadcrumb("debug", TCHAR_TO_UTF8(V));
+
+	sentry_value_set_by_key(crumb, "category", sentry_value_new_string(TCHAR_TO_UTF8(*Category.ToString())));
+
+	// find the level from verbosity
+	const char* clevel = nullptr;
+	switch (Verbosity)
+	{
+	case ELogVerbosity::Fatal:
+		clevel = "fatal";
+		break;
+	case ELogVerbosity::Error:
+		clevel = "error";
+		break;
+	case ELogVerbosity::Warning:
+		clevel = "warning";
+		break;
+	case ELogVerbosity::Display:
+	case ELogVerbosity::Log:
+		clevel = "info";
+		break;
+	case ELogVerbosity::Verbose:
+	case ELogVerbosity::VeryVerbose:
+		clevel = "debug";
+	}
+	if (clevel != nullptr)
+	{
+		//todo, test using sentry_value_new_int
+		sentry_value_set_by_key(crumb, "level", sentry_value_new_string(clevel));
+	}
+
+	sentry_add_breadcrumb(crumb);
+}
 
 static void _SentryLog(sentry_level_t level, const char* message, va_list args, void* userdata)
 {
@@ -135,8 +171,9 @@ void FSentryClientModule::StartupModule()
 	// - Environment
 	// - Command line
 
-	
+	LogDevice = MakeShareable(new FSentryOutputDevice(this));
 
+	
 	FString dsn = USentryClientConfig::GetDSN();
 	if (dsn.IsEmpty()) {
 		UE_LOG(LogSentryClient, Log, TEXT("Module startup: No DSN specifiead, not initializing (.ini DSN, env/cmdline SENTRY_DSN"));
@@ -251,6 +288,10 @@ bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment,
 	{
 		initialized = true;
 
+		// Hook the log stream handler into GLog
+		GLog->AddOutputDevice(LogDevice.Get());
+		GLog->SerializeBacklog(LogDevice.Get());
+
 #if HAVE_CRASH_HANDLING_THING
 		// instruct UE not to try to do crash handling itself
 		FPlatformMisc::SetCrashHandling(ECrashHandlingType::Disabled);
@@ -267,6 +308,11 @@ void FSentryClientModule::SentryClose()
 {
 	if (initialized)
 	{
+		if (GLog)
+		{
+			GLog->RemoveOutputDevice(LogDevice.Get());
+		}
+
 		int fail = sentry_close();
 		if (!fail)
 		{

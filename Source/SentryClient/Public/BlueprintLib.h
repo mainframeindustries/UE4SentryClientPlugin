@@ -45,6 +45,21 @@ enum class ESentryBreadcrumbType : uint8
 	User,
 };
 
+// re-create the verbosity as enum
+
+UENUM(BlueprintType)
+enum class ESentryVerbosity : uint8
+{
+	_NoLogging = 0 UMETA(DisplayName = "NoLogging"),
+	_Fatal = ELogVerbosity::Fatal UMETA(DisplayName = "Fatal"),
+	_Error = ELogVerbosity::Error UMETA(DisplayName = "Error"),
+	_Warning = ELogVerbosity::Warning UMETA(DisplayName = "Warning"),
+	_Display = ELogVerbosity::Display UMETA(DisplayName = "Display"),
+	_Log = ELogVerbosity::Log UMETA(DisplayName = "Log"),
+	_Verbose = ELogVerbosity::Verbose UMETA(DisplayName = "Verbose"),
+	_VeryVerbose = ELogVerbosity::VeryVerbose UMETA(DisplayName = "VeryVerbose"),
+};
+
 UCLASS()
 class USentryBlueprintLibrary : public UBlueprintFunctionLibrary
 {
@@ -58,6 +73,13 @@ public:
 	// Initialize the sentry client
 	UFUNCTION(BlueprintCallable, Category = "Sentry")
 	static bool Initialize(const FString &DSN, const FString &Environment, const FString &Release, bool IsConsentRequired);
+
+	/** 
+	 * Set verbosity for breadcrumbs
+	 * @param Verbosity The highest verbosity logs that will be sent as breadcrumbs
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry")
+	void SetVerbosity(ESentryVerbosity Verbosity);
 
 	// Close the sentry client
 	UFUNCTION(BlueprintCallable, Category = "Sentry")
