@@ -157,7 +157,7 @@ void USentryBlueprintLibrary::RemoveTag(const FString& key)
 
 // Breadcrumbs.  Currently support only "Default"
 void USentryBlueprintLibrary::AddBreadcrumb(ESentryBreadcrumbType type, const FString& message,
-	const FString& category, const FString& level)
+	const FString& category, const ESentryLevel level)
 {
 	sentry_value_t crumb = BreadCrumb(type, message, category, level);
 	sentry_add_breadcrumb(crumb);
@@ -165,7 +165,7 @@ void USentryBlueprintLibrary::AddBreadcrumb(ESentryBreadcrumbType type, const FS
 
 // Breadcrumbs.  Currently support only "Default"
 void USentryBlueprintLibrary::AddStringBreadcrumb(ESentryBreadcrumbType type, const FString& message,
-	const FString& category, const FString& level, const FString& StringData)
+	const FString& category, ESentryLevel level, const FString& StringData)
 {
 	sentry_value_t crumb = BreadCrumb(type, message, category, level);
 	sentry_value_set_by_key(crumb, "data", sentry_value_new_string(TCHAR_TO_UTF8(*StringData)));
@@ -174,7 +174,7 @@ void USentryBlueprintLibrary::AddStringBreadcrumb(ESentryBreadcrumbType type, co
 
 // Breadcrumbs.  Currently support only "Default"
 void USentryBlueprintLibrary::AddMapBreadcrumb(ESentryBreadcrumbType type, const FString& message,
-	const FString& category, const FString& level, const TMap<FString, FString>& MapData)
+	const FString& category, ESentryLevel level, const TMap<FString, FString>& MapData)
 {
 	sentry_value_t crumb = BreadCrumb(type, message, category, level);
 	sentry_value_t data = sentry_value_new_object();
@@ -187,7 +187,7 @@ void USentryBlueprintLibrary::AddMapBreadcrumb(ESentryBreadcrumbType type, const
 }
 
 sentry_value_t USentryBlueprintLibrary::BreadCrumb(ESentryBreadcrumbType type, const FString& message,
-	const FString& category, const FString& level)
+	const FString& category, ESentryLevel level)
 {
 	sentry_value_t crumb;
 	const ANSICHAR* ctype = "default";
@@ -225,14 +225,34 @@ sentry_value_t USentryBlueprintLibrary::BreadCrumb(ESentryBreadcrumbType type, c
 		break;
 	}
 
+	const ANSICHAR* clevel = nullptr;
+	switch (level)
+	{
+	case ESentryLevel::SENTRY_FATAL:
+		clevel = "fatal";
+		break;
+	case ESentryLevel::SENTRY_ERROR:
+		clevel = "error";
+		break;
+	case ESentryLevel::SENTRY_WARNING:
+		clevel = "warning";
+		break;
+	case ESentryLevel::SENTRY_INFO:
+		clevel = "info";
+		break;
+	case ESentryLevel::SENTRY_DEBUG:
+		clevel = "debug";
+		break;
+	}
+
 	crumb = sentry_value_new_breadcrumb(ctype, TCHAR_TO_UTF8(*message));
 	if (!category.IsEmpty())
 	{
 		sentry_value_set_by_key(crumb, "category", sentry_value_new_string(TCHAR_TO_UTF8(*category)));
 	}
-	if (!level.IsEmpty())
+	if (clevel != nullptr)
 	{
-		sentry_value_set_by_key(crumb, "level", sentry_value_new_string(TCHAR_TO_UTF8(*level)));
+		sentry_value_set_by_key(crumb, "level", sentry_value_new_string(clevel));
 	}
 	return crumb;
 }

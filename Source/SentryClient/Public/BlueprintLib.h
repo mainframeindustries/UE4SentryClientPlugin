@@ -154,7 +154,7 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Sentry|Breadcrumb")
 	static void AddBreadcrumb(ESentryBreadcrumbType type, const FString& message,
-	const FString& _category, const FString& level);
+	const FString& _category, ESentryLevel level);
 	/**
 	 * Add a breacrumb with a String as "data"
 	 * See https://docs.sentry.io/platforms/native/enriching-events/breadcrumbs/
@@ -162,7 +162,7 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Sentry|Breadcrumb")
 	static void AddStringBreadcrumb(ESentryBreadcrumbType type, const FString& message,
-		const FString& _category, const FString& level, const FString& StringData);
+		const FString& _category, ESentryLevel level, const FString& StringData);
 	/**
 	 * Add a breacrumb with a String as "data"
 	 * See https://docs.sentry.io/platforms/native/enriching-events/breadcrumbs/
@@ -170,11 +170,11 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Sentry|Breadcrumb")
 	static void AddMapBreadcrumb(ESentryBreadcrumbType type, const FString& message,
-	const FString& _category, const FString& level, const TMap<FString, FString>& MapData);
+	const FString& _category, ESentryLevel level, const TMap<FString, FString>& MapData);
 		
 
 	// helper function
 	static sentry_value_t BreadCrumb(ESentryBreadcrumbType type, const FString& message,
-		const FString& _category, const FString& level);
+		const FString& _category, ESentryLevel level);
 };
 

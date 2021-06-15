@@ -36,7 +36,7 @@ void FSentryOutputDevice::Serialize(const TCHAR* V, ELogVerbosity::Type Verbosit
 	sentry_value_set_by_key(crumb, "category", sentry_value_new_string(TCHAR_TO_UTF8(*Category.ToString())));
 
 	// find the level from verbosity
-	const char* clevel = nullptr;
+	const ANSICHAR* clevel = nullptr;
 	switch (Verbosity)
 	{
 	case ELogVerbosity::Fatal:
