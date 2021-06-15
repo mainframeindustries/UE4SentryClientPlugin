@@ -53,10 +53,16 @@ static sentry_value_t SentryEventFunction(sentry_value_t event, void* hint, void
 
 FString USentryClientConfig::GetEnvOrCmdLine(const TCHAR* name)
 {
-	// check if there is a command line flag, of the format -SENTRY_name=
+	// check if there is a command line flag, of the format -SENTRY_name= or -SENTRY-name=
 	FString cmd;
 	if (FParse::Value(FCommandLine::Get(), *FString::Printf(TEXT("-SENTRY_%s="), name), cmd))
+	{
 		return cmd;
+	}
+	if (FParse::Value(FCommandLine::Get(), *FString::Printf(TEXT("-SENTRY-%s="), name), cmd))
+	{
+		return cmd;
+	}
 	return FGenericPlatformMisc::GetEnvironmentVariable(*FString::Printf(TEXT("SENTRY_%s"), name));
 }
 
