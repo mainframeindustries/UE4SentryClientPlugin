@@ -292,6 +292,9 @@ bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment,
 		GLog->AddOutputDevice(LogDevice.Get());
 		GLog->SerializeBacklog(LogDevice.Get());
 
+		// Set default context stuff
+		SetupContext();
+
 #if HAVE_CRASH_HANDLING_THING
 		// instruct UE not to try to do crash handling itself
 		FPlatformMisc::SetCrashHandling(ECrashHandlingType::Disabled);
@@ -354,6 +357,53 @@ void FSentryClientModule::SentryLog(int level, const char* message, va_list args
 		UE_LOG(LogSentryCore, Fatal, TEXT("%s"), ANSI_TO_TCHAR(buf));
 		break;
 	}
+}
+
+void FSentryClientModule::SetupContext()
+{
+	// Add an "app" context, as described https://develop.sentry.dev/sdk/event-payloads/contexts/
+	auto value = sentry_value_new_object();
+	sentry_value_set_by_key(value, "type", sentry_value_new_string("app"));
+
+	TCHAR* Configuration = TEXT("Unknown");
+	auto conf = FApp::GetBuildConfiguration();
+	if (conf == EBuildConfiguration::Debug)
+		Configuration = TEXT("Debug");
+	else if (conf == EBuildConfiguration::DebugGame)
+		Configuration = TEXT("DebugGame");
+	else if (conf == EBuildConfiguration::Development)
+		Configuration = TEXT("Development");
+	else if (conf == EBuildConfiguration::Shipping)
+		Configuration = TEXT("Shipping");
+	else if (conf == EBuildConfiguration::Test)
+		Configuration = TEXT("Test");
+
+	TCHAR* TargetType = TEXT("Unkown");
+	auto target = FApp::GetBuildTargetType();
+	if (target == EBuildTargetType::Game)
+		TargetType = TEXT("Game");
+	else if (target == EBuildTargetType::Server)
+		TargetType = TEXT("Server");
+	else if (target == EBuildTargetType::Client)
+		TargetType = TEXT("Client");
+	else if (target == EBuildTargetType::Editor)
+		TargetType = TEXT("Editor");
+	else if (target == EBuildTargetType::Program)
+		TargetType = TEXT("Program");
+
+	FString BuildType = FString::Printf(TEXT("%s-%s"), Configuration, TargetType);
+	sentry_value_set_by_key(value, "build_type", sentry_value_new_string(TCHAR_TO_UTF8(*BuildType)));
+	
+	FString Name = FApp::GetName();
+	sentry_value_set_by_key(value, "app_name", sentry_value_new_string(TCHAR_TO_UTF8(*Name)));
+	const TCHAR *Version = FApp::GetBuildVersion();
+	sentry_value_set_by_key(value, "app_version", sentry_value_new_string(TCHAR_TO_UTF8(Version)));
+
+	const TCHAR *CommandLine = FCommandLine::Get();
+	sentry_value_set_by_key(value, "commandline", sentry_value_new_string(TCHAR_TO_UTF8(CommandLine)));
+
+
+	sentry_set_context("app", value);
 }
 
 #undef LOCTEXT_NAMESPACE
