@@ -393,7 +393,7 @@ void FSentryClientModule::SetupContext()
 	else if (target == EBuildTargetType::Program)
 		TargetType = TEXT("Program");
 	else
-		Configuration = TEXT("Unknown");
+		TargetType = TEXT("Unknown");
 
 	FString BuildType = FString::Printf(TEXT("%s-%s"), Configuration, TargetType);
 	sentry_value_set_by_key(value, "build_type", sentry_value_new_string(TCHAR_TO_UTF8(*BuildType)));
