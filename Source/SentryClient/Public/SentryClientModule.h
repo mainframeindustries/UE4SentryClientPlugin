@@ -56,6 +56,8 @@ public:
 	bool SentryInit(const TCHAR* DNS, const TCHAR* Environment, const TCHAR* Release, bool IsConsentRequired);
 	void SentryClose();
 
+	void SetupContext();
+
 	// get the module if it exists
 	static FSentryClientModule* Get();
 	bool IsInitialized() const { return initialized; }
