@@ -103,6 +103,17 @@ static void _SentryLog(sentry_level_t level, const char* message, va_list args, 
 
 static sentry_value_t SentryEventFunction(sentry_value_t event, void* hint, void* closure)
 {
+
+#if 0
+	// We can just defer to the Error handler if we want here, get the dialogue box and everything...
+	// but that disables the sentry thing.
+	if (GError)
+	{
+		GError->HandleError();
+	}
+#endif
+
+
 	// Some code from WindowsCrashHandlingContext.cpp
 	// 
 	// Then try run time crash processing and broadcast information about a crash.
