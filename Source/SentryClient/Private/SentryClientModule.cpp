@@ -365,7 +365,7 @@ void FSentryClientModule::SetupContext()
 	auto value = sentry_value_new_object();
 	sentry_value_set_by_key(value, "type", sentry_value_new_string("app"));
 
-	TCHAR* Configuration = TEXT("Unknown");
+	const TCHAR* Configuration = nullptr;
 	auto conf = FApp::GetBuildConfiguration();
 	if (conf == EBuildConfiguration::Debug)
 		Configuration = TEXT("Debug");
@@ -377,8 +377,10 @@ void FSentryClientModule::SetupContext()
 		Configuration = TEXT("Shipping");
 	else if (conf == EBuildConfiguration::Test)
 		Configuration = TEXT("Test");
+	else
+		Configuration = TEXT("Unknown");
 
-	TCHAR* TargetType = TEXT("Unkown");
+	const TCHAR* TargetType = nullptr;
 	auto target = FApp::GetBuildTargetType();
 	if (target == EBuildTargetType::Game)
 		TargetType = TEXT("Game");
@@ -390,6 +392,8 @@ void FSentryClientModule::SetupContext()
 		TargetType = TEXT("Editor");
 	else if (target == EBuildTargetType::Program)
 		TargetType = TEXT("Program");
+	else
+		TargetType = TEXT("Unknown");
 
 	FString BuildType = FString::Printf(TEXT("%s-%s"), Configuration, TargetType);
 	sentry_value_set_by_key(value, "build_type", sentry_value_new_string(TCHAR_TO_UTF8(*BuildType)));
