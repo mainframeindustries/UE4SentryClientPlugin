@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
+#include "Misc/OutputDeviceError.h"
 
 #if PLATFORM_WINDOWS
 #include "Windows/AllowWindowsPlatformTypes.h"
@@ -40,9 +41,37 @@ public:
 
 	// Serialize, which runs on tick, and notifies if a new message has been created.
 	virtual void Serialize(const TCHAR* V, ELogVerbosity::Type Verbosity, const class FName& Category) override;
+
+	// actual serialization function
+	static void StaticSerialize(const TCHAR* Msg, ELogVerbosity::Type Verbosity, const class FName& Category);
+
 private:
 	FSentryClientModule* module;
 };
+
+class FSentryErrorOutputDevice : public FOutputDeviceError
+{
+public:
+	/**
+	 * Serializes the passed in data unless the current event is suppressed.
+	 *
+	 * @param	Data	Text to log
+	 * @param	Event	Event name used for suppression purposes
+	 */
+	virtual void Serialize(const TCHAR* Msg, ELogVerbosity::Type Verbosity, const class FName& Category) override;
+
+	/**
+	 * Error handling function that is being called from within the system wide global
+	 * error handler, e.g. using structured exception handling on the PC.
+	 */
+	virtual void HandleError() override;
+
+	void SetParent(FOutputDeviceError* _p) { parent = _p; }
+private:
+	FOutputDeviceError* parent = nullptr;
+};
+
+
 
 class FSentryClientModule : public IModuleInterface
 {
@@ -73,6 +102,7 @@ private:
 	FString CrashPadLocation;
 	TSharedPtr<FSentryOutputDevice> LogDevice;
 	ELogVerbosity::Type Verbosity = ELogVerbosity::Warning;  // only report warnings or worse as breadcrumbs
+	static FSentryErrorOutputDevice ErrorDevice;
 };
 
 

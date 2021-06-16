@@ -20,8 +20,11 @@
 DEFINE_LOG_CATEGORY(LogSentryClient);
 DEFINE_LOG_CATEGORY(LogSentryCore);
 
-
+// Define this as 1 if your UnrealEngine can control crash handler settings.
 #define HAVE_CRASH_HANDLING_THING 0
+
+FSentryErrorOutputDevice FSentryClientModule::ErrorDevice = FSentryErrorOutputDevice();
+
 void FSentryOutputDevice::Serialize(const TCHAR* V, ELogVerbosity::Type Verbosity, const class FName& Category)
 {
 
@@ -30,6 +33,12 @@ void FSentryOutputDevice::Serialize(const TCHAR* V, ELogVerbosity::Type Verbosit
 	{
 		return;
 	}
+	StaticSerialize(V, Verbosity, Category);
+	
+}
+
+void FSentryOutputDevice::StaticSerialize(const TCHAR* V, ELogVerbosity::Type Verbosity, const class FName& Category)
+{
 
 	auto crumb = sentry_value_new_breadcrumb("debug", TCHAR_TO_UTF8(V));
 
@@ -64,6 +73,27 @@ void FSentryOutputDevice::Serialize(const TCHAR* V, ELogVerbosity::Type Verbosit
 
 	sentry_add_breadcrumb(crumb);
 }
+
+
+// The ErrorOutputDevice is used by Assert handlers.  Use this to capture the assert message and send it to Sentry.
+void FSentryErrorOutputDevice::Serialize(const TCHAR* V, ELogVerbosity::Type Verbosity, const class FName& Category)
+{
+	// sent to our sentry handler, then pass on to previous.
+	FSentryOutputDevice::StaticSerialize(V, ELogVerbosity::Fatal, Category);
+	if (parent)
+	{
+		parent->Serialize(V, Verbosity, Category);
+	}
+}
+
+void FSentryErrorOutputDevice::HandleError()
+{
+	if (parent)
+	{
+		parent->HandleError();
+	}
+}
+
 
 static void _SentryLog(sentry_level_t level, const char* message, va_list args, void* userdata)
 {
@@ -291,6 +321,13 @@ bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment,
 		// Hook the log stream handler into GLog
 		GLog->AddOutputDevice(LogDevice.Get());
 		GLog->SerializeBacklog(LogDevice.Get());
+
+		// Set the global error handler.  It is just a static object that we leave in place.
+		if (GError != &ErrorDevice)
+		{
+			ErrorDevice.SetParent(GError);
+			GError = &ErrorDevice;
+		}
 
 		// Set default context stuff
 		SetupContext();
