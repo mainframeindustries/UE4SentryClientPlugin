@@ -14,6 +14,8 @@
 
 #include "BlueprintLib.h"
 
+#include <stdio.h>
+
 
 #define LOCTEXT_NAMESPACE "FSentryClientModule"
 
@@ -399,24 +401,32 @@ void FSentryClientModule::SentryLog(int level, const char* message, va_list args
 {
 	ANSICHAR buf[512];
 	auto formatted = FCStringAnsi::GetVarArgs(buf, sizeof(buf), message, args);
+	const char* tlevel = "";
 	switch ((sentry_level_t)level)
 	{
 	case SENTRY_LEVEL_DEBUG:
 		UE_LOG(LogSentryCore, Verbose, TEXT("%s"), ANSI_TO_TCHAR(buf));
+		tlevel = "debug";
 		break;
 	case SENTRY_LEVEL_INFO:
 		UE_LOG(LogSentryCore, Display, TEXT("%s"), ANSI_TO_TCHAR(buf));
+		tlevel = "info";
 		break;
 	case SENTRY_LEVEL_WARNING:
 		UE_LOG(LogSentryCore, Warning, TEXT("%s"), ANSI_TO_TCHAR(buf));
+		tlevel = "warning";
 		break;
 	case SENTRY_LEVEL_ERROR:
 		UE_LOG(LogSentryCore, Error, TEXT("%s"), ANSI_TO_TCHAR(buf));
+		tlevel = "error";
 		break;
 	case SENTRY_LEVEL_FATAL:
 		UE_LOG(LogSentryCore, Fatal, TEXT("%s"), ANSI_TO_TCHAR(buf));
+		tlevel = "fatal";
 		break;
 	}
+	// also output to stdandard error, since the log subsystem may have crashed
+	fprintf(stderr, "Sentry [%s] : %s\n", tlevel, buf);
 }
 
 void FSentryClientModule::SetupContext()
