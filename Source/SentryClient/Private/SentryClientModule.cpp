@@ -272,6 +272,7 @@ bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment,
 #endif
 
 	// Location of the crashpad_backend.exe on windows
+	// or crashpad_backend on linux.
 	// This must match the SentryClient.build.cs paths
 #if PLATFORM_WINDOWS
 	if (CrashPadLocation.IsEmpty())
@@ -284,6 +285,17 @@ bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment,
 		CrashPadLocation = FPaths::ConvertRelativePathToFull(CrashPadLocation);
 	}
 	sentry_options_set_handler_pathw(options, *CrashPadLocation);
+#elif PLATFORM_LINUX
+if (CrashPadLocation.IsEmpty())
+	{
+		auto Plugin = IPluginManager::Get().FindPlugin(SENTRY_PLUGIN_NAME);
+		FString BaseDir = Plugin->GetBaseDir();
+		CrashPadLocation = FPaths::Combine(BaseDir,
+			TEXT("Binaries/ThirdParty/sentry-native/Linux/bin/crashpad_handler")
+			);
+		CrashPadLocation = FPaths::ConvertRelativePathToFull(CrashPadLocation);
+	}
+	sentry_options_set_handler_path(options, TCHAR_TO_UTF8(*CrashPadLocation));
 #endif
 
 	sentry_options_set_dsn(options, TCHAR_TO_ANSI(DSN));

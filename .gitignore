@@ -80,8 +80,8 @@ Intermediate/
 # Specific project stuff:
 
 # ignore binaries, except thirdparty, in plugin
-SentryClient/Binaries/*
-!SentryClient/Binaries/ThirdParty/
+/Binaries/*
+!/Binaries/ThirdParty/
 
 # allow all the third party built binaries types
 !**/ThirdParty/**/*.pdb

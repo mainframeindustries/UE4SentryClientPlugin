@@ -87,8 +87,16 @@ public class SentryClient : ModuleRules
 				new string[]
 				{
 					"libsentry.a",
-					"libbreakpad_client.a",
+					"libcrashpad_client.a",
+					"libcrashpad_compat.a",
+					"libcrashpad_handler_lib.a",
+					"libcrashpad_minidump.a",
+					"libcrashpad_snapshot.a",
+					"libcrashpad_tools.a",
+					"libcrashpad_util.a",
+					"libmini_chromium.a",
 				};
+			RuntimeDependencies.Add(Path.Combine(SentryPlatform, "bin", "crashpad_handler"));
 		}
 		else
         {

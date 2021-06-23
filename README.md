@@ -68,7 +68,7 @@ We must use the `RelWithDebInfo` configuration because the `Debug` configuration
 the Debug windows CRT, which is incompatible with UE. UnrealEngine 4.26 uses VisualStudio 2017 as the official code generator.  Newer versions of VisualStudio create code that cannot be linked with an engine built with 2017.
 
 1. Install cmake, e.g. using `choco install cmake` (see https://chocolatey.org/ for the choco installer)
-2. Open a command shell and enter the `SentryClient/Source/ThirdParty/sentry-native` folder
+2. Open a command shell and enter the `Source/ThirdParty/sentry-native` folder
 3. Delete any pre-existing `build` folder
 4. Run `cmake -G "Visual Studio 15 2017 Win64" -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none` to configure cmake
 6. Run `cmake --build build --config RelWithDebInfo` to build the binaries (do not specify --parallel, it will only build the `Debug` config)
@@ -77,13 +77,15 @@ the Debug windows CRT, which is incompatible with UE. UnrealEngine 4.26 uses Vis
 ### Building for Linux
 This follows much the same steps as above, except that the `install` folder should be `Linux` instead of `Win64`
 You need a minimum version of `CMake 3.12` for this to work.  In case of problems running the first
-step, try upgrading cmake.
+step, try upgrading cmake.  We will use the `crashpad` backend for linux, instead of the default `breakpad` since the
+crashpad handler is out of process and uploads immediately, rather than during the next run.  This is important for linux servers.
 1. Install compilation prerequisites, such as `build-essential` along with other libs: `zlib-dev`,`libssl-dev`, `libc++-dev`,
    `libc++abi-dev`, `clang`.  This varies according to your distro.
-2. `cd` to `SentryClinet/Source/ThirdParty/sentry-native`
+2. `cd` to `Source/ThirdParty/sentry-native`
 3. Delete any pre-existing `build-linux` folder
-2. Run `cmake -B build-linux -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none  
-       -DCMAKE__COMPILER=clang -DCMAKE_CXX_COMPILER="clang++"
+2. Run `cmake -B build-linux -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none  \
+       -DSENTRY_BACKEND=crashpad \
+       -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER="clang++" \
        -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-stdlib=libc++"`
 3. Run `cmake --build build-linux --config RelWithDebInfo --parallel`
 4. Run `cmake --install build-linux --prefix ../../../Binaries/ThirdParty/sentry-native/Linux --config RelWithDebInfo`
