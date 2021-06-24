@@ -16,7 +16,7 @@
 
 UENUM(BlueprintType)
 enum class ESentryLevel : uint8 {
-	SENTRY_DEBUG = 0,
+	SENTRY_DEBUG = 0 UMETA(DisplayName = "Debug"),
 	SENTRY_INFO = 1  UMETA(DisplayName = "Info"),
 	SENTRY_WARNING = 2  UMETA(DisplayName = "Warning"),
 	SENTRY_ERROR = 3  UMETA(DisplayName = "Error"),
