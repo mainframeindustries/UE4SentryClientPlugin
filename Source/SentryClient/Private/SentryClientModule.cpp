@@ -421,7 +421,10 @@ void FSentryClientModule::SentryLog(int level, const char* message, va_list args
 		tlevel = "error";
 		break;
 	case SENTRY_LEVEL_FATAL:
-		UE_LOG(LogSentryCore, Fatal, TEXT("%s"), ANSI_TO_TCHAR(buf));
+		// We cannot use the UE fatal level because it will terminate unreal.
+		// fatal sentry errors can for example mean failure to start backend.
+		// This is not fatal for unreal, though.
+		UE_LOG(LogSentryCore, Error, TEXT("(sentry FATAL) %s"), ANSI_TO_TCHAR(buf));
 		tlevel = "fatal";
 		break;
 	}
