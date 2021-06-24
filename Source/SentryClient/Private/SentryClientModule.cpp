@@ -470,6 +470,7 @@ void FSentryClientModule::SetupContext()
 
 	FString BuildType = FString::Printf(TEXT("%s-%s"), Configuration, TargetType);
 	sentry_value_set_by_key(value, "build_type", sentry_value_new_string(TCHAR_TO_UTF8(*BuildType)));
+	sentry_value_set_by_key(value, "build_date", sentry_value_new_string(TCHAR_TO_UTF8(*FApp::GetBuildDate())));
 	
 	FString Name = FApp::GetName();
 	sentry_value_set_by_key(value, "app_name", sentry_value_new_string(TCHAR_TO_UTF8(*Name)));
@@ -478,9 +479,22 @@ void FSentryClientModule::SetupContext()
 
 	const TCHAR *CommandLine = FCommandLine::Get();
 	sentry_value_set_by_key(value, "commandline", sentry_value_new_string(TCHAR_TO_UTF8(CommandLine)));
-
-
 	sentry_set_context("app", value);
+
+	// Set up an UnrealEngine context:
+	value = sentry_value_new_object();
+	sentry_value_set_by_key(value, "Target Type", sentry_value_new_string(TCHAR_TO_ANSI(TargetType)));
+	sentry_value_set_by_key(value, "Configuration", sentry_value_new_string(TCHAR_TO_ANSI(Configuration)));
+	sentry_value_set_by_key(value, "Product Identifier", sentry_value_new_string(TCHAR_TO_ANSI(*FApp::GetEpicProductIdentifier())));
+	sentry_value_set_by_key(value, "Project Name", sentry_value_new_string(TCHAR_TO_ANSI(FApp::GetProjectName())));
+	sentry_value_set_by_key(value, "Is Game", sentry_value_new_string(FApp::IsGame() ? "true" : "false"));
+	sentry_value_set_by_key(value, "Is Engine Installed", sentry_value_new_string(FApp::IsEngineInstalled() ? "true" : "false"));
+	sentry_set_context("unreal", value);
+
+	// Set up some tags as well.
+	sentry_set_tag("unreal.target_type", TCHAR_TO_ANSI(TargetType));
+	sentry_set_tag("unreal.configuration", TCHAR_TO_ANSI(Configuration));
+	sentry_set_tag("unreal.is_game", FApp::IsGame() ? "true" : "false");
 }
 
 #undef LOCTEXT_NAMESPACE
