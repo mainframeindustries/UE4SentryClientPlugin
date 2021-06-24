@@ -147,6 +147,7 @@ FString USentryClientConfig::GetEnvOrCmdLine(const TCHAR* name)
 
 bool USentryClientConfig::IsEnabled()
 {
+	// command line or env can override
 	FString val = GetEnvOrCmdLine(TEXT("ENABLED"));
 	if (!val.IsEmpty()) {
 		if (val == TEXT("0") ||
@@ -154,11 +155,26 @@ bool USentryClientConfig::IsEnabled()
 			val.Compare(TEXT("no"), ESearchCase::IgnoreCase) == 0
 			)
 		{
-			return true;
+			return false;
 		}
-		return false;
+		return true;
 	}
-	return Get()->Enabled;
+
+	// Config can disable it
+	bool enabled = Get()->Enabled;
+
+	// and we can have logic to disable it too, e.g. for local builds.
+	if (enabled)
+	{
+		enabled = !Get()->ShouldDisable();
+	}
+	return enabled;
+}
+
+// TODO: Add logic here for smart disabling of sentry, e.g. for local builds
+bool USentryClientConfig::ShouldDisable()
+{
+	return false;
 }
 
 FString USentryClientConfig::GetDSN()

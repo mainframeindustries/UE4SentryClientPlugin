@@ -143,6 +143,7 @@ public:
 	static FString GetEnvOrCmdLine(const TCHAR* name);
 
 	static bool IsEnabled();
+	static bool ShouldDisable();
 	static FString GetDSN();
 	static FString GetEnvironment();
 	static FString GetRelease();
