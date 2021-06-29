@@ -12,8 +12,6 @@
 #include "Interfaces/IHttpRequest.h"
 #include "HAL/CriticalSection.h"
 
-// #include "SentryTransport.generated.h"
-
 
 class FSentryTransport : public TSharedFromThis<FSentryTransport, ESPMode::ThreadSafe>
 {

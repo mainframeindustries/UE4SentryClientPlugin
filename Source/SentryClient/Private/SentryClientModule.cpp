@@ -1,7 +1,6 @@
 #include "SentryClientModule.h"
 #include "SentryTransport.h"
-
-
+#include "BlueprintLib.h"
 
 #include "Misc/Paths.h"
 #include "Misc/CommandLine.h"
@@ -12,7 +11,6 @@
 #include "Kismet/KismetSystemLibrary.h"  // for user name
 #include "GenericPlatform/GenericPlatformProcess.h"	// for hostname
 
-#include "BlueprintLib.h"
 
 #include <stdio.h>
 

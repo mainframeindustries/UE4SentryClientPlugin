@@ -1,6 +1,129 @@
 #include "BlueprintLib.h"
 
 
+USentryValue::USentryValue()
+{
+	value = sentry_value_new_null();
+}
+
+// create a value taking ownership of value
+USentryValue::USentryValue(sentry_value_t v)
+{
+	value = v;
+}
+
+USentryValue* USentryValue::CreateValueNull()
+{
+	return NewObject<USentryValue>();
+}
+
+USentryValue* USentryValue::CreateValueString(const FString& str)
+{
+	USentryValue* value = NewObject<USentryValue>();
+	value->Take(sentry_value_new_string(TCHAR_TO_UTF8(*str)));
+	return value;
+}
+
+USentryValue* USentryValue::CreateValueInt(int32 i)
+{
+	USentryValue* value = NewObject<USentryValue>();
+	value->Take(sentry_value_new_int32(i));
+	return value;
+}
+
+USentryValue* USentryValue::CreateValueFloat(float f)
+{
+	USentryValue* value = NewObject<USentryValue>();
+	value->Take(sentry_value_new_double((double)f));
+	return value;
+	
+}
+
+USentryValue* USentryValue::CreateValueBool(bool b)
+{
+	USentryValue* value = NewObject<USentryValue>();
+	value->Take(sentry_value_new_bool((int)b));
+	return value;
+}
+
+
+USentryValue* USentryValue::CreateValueList(const TArray<USentryValue*>& l)
+{
+	auto value = sentry_value_new_list();
+	for (auto *v : l)
+	{
+		sentry_value_append(value, v->Get());
+	}
+	USentryValue* result = NewObject<USentryValue>();
+	result->Take(value);
+	return result;
+}
+USentryValue* USentryValue::CreateEmptyValueList()
+{
+	auto value = sentry_value_new_list();
+	USentryValue* result = NewObject<USentryValue>();
+	result->Take(value);
+	return result;
+}
+
+
+USentryValue* USentryValue::CreateValueObject(const TMap<FString, USentryValue*>& s)
+{
+	auto value = sentry_value_new_list();
+	for (auto &e : s)
+	{
+		sentry_value_set_by_key(value, TCHAR_TO_UTF8(*e.Key), e.Value->Get());
+	}
+	USentryValue* result = NewObject<USentryValue>();
+	result->Take(value);
+	return result;
+}
+
+USentryValue* USentryValue::CreateEmptyValueObject()
+{
+	auto value = sentry_value_new_object();
+	USentryValue* result = NewObject<USentryValue>();
+	result->Take(value);
+	return result;
+}
+
+void USentryValue::Append(USentryValue *v)
+{
+	sentry_value_append(value, v->Get());
+}
+
+void USentryValue::Set(const FString &key, USentryValue* v)
+{
+	sentry_value_set_by_key(value, TCHAR_TO_UTF8(*key), v->Get());
+}
+
+
+USentryValue::~USentryValue()
+{
+	sentry_value_decref(value);
+}
+
+// transfer ownership of value
+sentry_value_t USentryValue::Transfer()
+{
+	sentry_value_t res = value;
+	value = sentry_value_new_null();
+	return res;	
+}
+
+sentry_value_t USentryValue::Get() const
+{
+	sentry_value_incref(value);
+	return value;
+}
+
+void USentryValue::Take(sentry_value_t v)
+{
+	sentry_value_decref(value);
+	value = v;
+}
+
+
 bool USentryBlueprintLibrary::IsInitialized()
 {
 	auto* module = FSentryClientModule::Get();
@@ -134,6 +257,11 @@ void USentryBlueprintLibrary::SetContext(const FString& key, const TMap<FString,
 	sentry_set_context(TCHAR_TO_UTF8(*key), values);
 }
 
+void USentryBlueprintLibrary::SetContextObject(const FString& key, USentryValue *value)
+{
+	sentry_set_context(TCHAR_TO_UTF8(*key), value->Get());
+}
+
 /**
  * Clear information about the current user
  */
@@ -183,6 +311,14 @@ void USentryBlueprintLibrary::AddMapBreadcrumb(ESentryBreadcrumbType type, const
 		sentry_value_set_by_key(data, TCHAR_TO_UTF8(*pair.Key), sentry_value_new_string(TCHAR_TO_UTF8(*pair.Value)));
 	}
 	sentry_value_set_by_key(crumb, "data", data);
+	sentry_add_breadcrumb(crumb);
+}
+
+void USentryBlueprintLibrary::AddValueBreadcrumb(ESentryBreadcrumbType type, const FString& message,
+	const FString& category, ESentryLevel level, USentryValue *value)
+{
+	sentry_value_t crumb = BreadCrumb(type, message, category, level);
+	sentry_value_set_by_key(crumb, "data", value->Get());
 	sentry_add_breadcrumb(crumb);
 }
 

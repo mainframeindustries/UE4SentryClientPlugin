@@ -60,6 +60,100 @@ enum class ESentryVerbosity : uint8
 	_VeryVerbose = ELogVerbosity::VeryVerbose UMETA(DisplayName = "VeryVerbose"),
 };
 
+
+/**
+ * A class that represents a sentry generic value
+ */
+UCLASS(BlueprintType)
+class SENTRYCLIENT_API USentryValue : public UObject
+{
+	GENERATED_BODY()
+public:
+	USentryValue();
+	USentryValue(sentry_value_t);
+	~USentryValue();
+
+
+
+	/**
+	 * Generate a new null sentry value
+	 */
+	UFUNCTION(BlueprintPure, Category = "Sentry|Value")
+	static USentryValue *CreateValueNull();
+	
+	/**
+	 * Generate a new string sentry value
+	 */
+	UFUNCTION(BlueprintPure, Category = "Sentry|Value")
+	static USentryValue* CreateValueString(const FString &str);
+
+	/**
+	 * Generate a new int sentry value
+	 */
+	UFUNCTION(BlueprintPure, Category = "Sentry|Value")
+	static USentryValue* CreateValueInt(int32 i);
+
+	/**
+	 * Generate a new float sentry value
+	 */
+	UFUNCTION(BlueprintPure, Category = "Sentry|Value")
+	static USentryValue* CreateValueFloat(float f);
+
+	/**
+	 * Generate a new bool sentry value
+	 */
+	UFUNCTION(BlueprintPure, Category = "Sentry|Value")
+	static USentryValue* CreateValueBool(bool b);
+
+	/**
+	* Generate a new object sentry value from a map of values
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Value")
+	static USentryValue* CreateValueObject(const TMap<FString, USentryValue*>& map);
+
+	/**
+	* Generate a new list sentry value from an array of values
+	*/
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Value")
+	static USentryValue* CreateValueList(const TArray<USentryValue*>& array);
+
+	/**
+	 * Generate a new empty object sentry value
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Value")
+	static USentryValue* CreateEmptyValueObject();
+
+	/**
+	 * Generate a new empty list sentry value
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Value")
+	static USentryValue* CreateEmptyValueList();
+
+	/**
+	 * Append an value to a sentry list
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Value")
+	void Append(USentryValue *v);
+
+	/**
+	 * Set a key on an object sentry value
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Value")
+	void Set(const FString &key, USentryValue* value);
+
+	/* transfer refernce out of object.  set null object inside*/
+	sentry_value_t Transfer();
+	/* get new reference for object inside */
+	sentry_value_t Get() const;
+	/* Take ownership of incoming reference */
+	void Take(sentry_value_t v);
+	
+
+private:
+	sentry_value_t value;
+};
+
+
 UCLASS()
 class USentryBlueprintLibrary : public UBlueprintFunctionLibrary
 {
@@ -123,9 +217,18 @@ public:
 	/**
 	 * Add Context information
 	 * See https://docs.sentry.io/platforms/native/enriching-events/context/
+	 * @param value A string:string map representing the context
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Sentry|Context")
 	static void SetContext(const FString& key, const TMap<FString, FString> &Values);
+
+	/**
+	 * Add Context information
+	 * See https://docs.sentry.io/platforms/native/enriching-events/context/
+	 * @param value A Sentry Value Object representing the context.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Context")
+	static void SetContextObject(const FString& key, USentryValue *value);
 
 	/**
 	 * Clear information about the current user
@@ -172,9 +275,19 @@ public:
 	static void AddMapBreadcrumb(ESentryBreadcrumbType type, const FString& message,
 	const FString& _category, ESentryLevel level, const TMap<FString, FString>& MapData);
 		
+	/**
+	 * Add a breacrumb with a Sentry Value as data
+	 * See https://docs.sentry.io/platforms/native/enriching-events/breadcrumbs/
+	 * and https://develop.sentry.dev/sdk/event-payloads/breadcrumbs/#breadcrumb-types
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry|Breadcrumb")
+	static void AddValueBreadcrumb(ESentryBreadcrumbType type, const FString& message,
+			const FString& _category, ESentryLevel level, USentryValue *value);
 
 	// helper function
 	static sentry_value_t BreadCrumb(ESentryBreadcrumbType type, const FString& message,
 		const FString& _category, ESentryLevel level);
+
+
 };
 
