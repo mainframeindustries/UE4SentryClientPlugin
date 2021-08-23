@@ -139,7 +139,8 @@ public:
 	UPROPERTY(Config);
 	bool ConsentRequired = false;
 
-
+	// return an environment or command line option.  Return true if found.
+	static bool GetEnvOrCmdLine(const TCHAR* name, FString &out);
 	static FString GetEnvOrCmdLine(const TCHAR* name);
 
 	static bool IsEnabled();

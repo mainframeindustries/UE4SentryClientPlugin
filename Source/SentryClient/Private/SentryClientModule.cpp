@@ -128,27 +128,52 @@ static sentry_value_t SentryEventFunction(sentry_value_t event, void* hint, void
 	return event;
 }
 
+
 FString USentryClientConfig::GetEnvOrCmdLine(const TCHAR* name)
+{
+	FString out;
+	if (GetEnvOrCmdLine(name, out))
+	{
+		return out;
+	}
+	return FString();
+}
+
+bool USentryClientConfig::GetEnvOrCmdLine(const TCHAR* name, FString& out)
 {
 	// check if there is a command line flag, of the format -SENTRY_name= or -SENTRY-name=
 	FString cmd;
 	if (FParse::Value(FCommandLine::Get(), *FString::Printf(TEXT("-SENTRY_%s="), name), cmd))
 	{
-		return cmd;
+		out = cmd;
+		return true;
 	}
 	if (FParse::Value(FCommandLine::Get(), *FString::Printf(TEXT("-SENTRY-%s="), name), cmd))
 	{
-		return cmd;
+		out = cmd;
+		return true;
 	}
-	return FGenericPlatformMisc::GetEnvironmentVariable(*FString::Printf(TEXT("SENTRY_%s"), name));
+	// empty string here is ambiguous, can mean not found, or set to empty string.
+	// let's define empty env var as not exisiting.
+	cmd = FGenericPlatformMisc::GetEnvironmentVariable(*FString::Printf(TEXT("SENTRY_%s"), name));
+	if (!cmd.IsEmpty())
+	{
+		// Trim whitespace from end.  This way, you can set an env var to whitespace, to mean 'empty' but existing
+		cmd.TrimEndInline();
+		out = cmd;
+		return true;
+	}
+	return false;
 }
 
 bool USentryClientConfig::IsEnabled()
 {
 	// command line or env can override
-	FString val = GetEnvOrCmdLine(TEXT("ENABLED"));
-	if (!val.IsEmpty()) {
-		if (val == TEXT("0") ||
+	FString val;
+	if (GetEnvOrCmdLine(TEXT("ENABLED"), val))
+	{
+		if (val.IsEmpty() ||
+			val == TEXT("0") ||
 			val.Compare(TEXT("false"), ESearchCase::IgnoreCase) == 0 ||
 			val.Compare(TEXT("no"), ESearchCase::IgnoreCase) == 0
 			)
@@ -177,9 +202,13 @@ bool USentryClientConfig::ShouldDisable()
 
 FString USentryClientConfig::GetDSN()
 {
-	FString val = GetEnvOrCmdLine(TEXT("DSN"));
-	if (val.IsEmpty())
+	FString val;
+	
+	if (!GetEnvOrCmdLine(TEXT("DSN"), val))
+	{
+		// no command line option, use dsn
 		val = Get()->DSN;
+	}
 	return val;
 }
 
