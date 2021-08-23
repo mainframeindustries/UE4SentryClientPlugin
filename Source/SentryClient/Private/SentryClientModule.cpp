@@ -442,8 +442,14 @@ void FSentryClientModule::SentryLog(int level, const char* message, va_list args
 		tlevel = "fatal";
 		break;
 	}
+	FILE* out = stdout;
+	if (level > (int)SENTRY_LEVEL_DEBUG)
+	{
+		out = stderr;
+	}
 	// also output to stdandard error, since the log subsystem may have crashed
-	fprintf(stderr, "Sentry [%s] : %s\n", tlevel, buf);
+	fprintf(out, "Sentry [%s] : %s\n", tlevel, buf);
+	fflush(out);
 }
 
 void FSentryClientModule::SetupContext()
