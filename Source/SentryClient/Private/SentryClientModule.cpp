@@ -4,12 +4,12 @@
 
 #include "Misc/Paths.h"
 #include "Misc/CommandLine.h"
-#include "GenericPlatform/GenericPlatformMisc.h"
-#include "GenericPlatform/GenericPlatformOutputDevices.h"
+#include "HAL/PlatformMisc.h"
+#include "HAL/PlatformOutputDevices.h"
 #include "Interfaces/IPluginManager.h"
 #include "Modules/ModuleManager.h"
 #include "Kismet/KismetSystemLibrary.h"  // for user name
-#include "GenericPlatform/GenericPlatformProcess.h"	// for hostname
+#include "HAL/PlatformProcess.h"	// for hostname
 
 
 #include <stdio.h>
@@ -155,7 +155,7 @@ bool USentryClientConfig::GetEnvOrCmdLine(const TCHAR* name, FString& out)
 	}
 	// empty string here is ambiguous, can mean not found, or set to empty string.
 	// let's define empty env var as not exisiting.
-	cmd = FGenericPlatformMisc::GetEnvironmentVariable(*FString::Printf(TEXT("SENTRY_%s"), name));
+	cmd = FPlatformMisc::GetEnvironmentVariable(*FString::Printf(TEXT("SENTRY_%s"), name));
 	if (!cmd.IsEmpty())
 	{
 		// Trim whitespace from end.  This way, you can set an env var to whitespace, to mean 'empty' but existing
@@ -359,7 +359,7 @@ if (CrashPadLocation.IsEmpty())
 
 	// We want sentry to send the log with any crash
 	// TODO: make it possible to only add this with crashes, not other events?
-	FString logfile = FGenericPlatformOutputDevices::GetAbsoluteLogFilename();
+	FString logfile = FPlatformOutputDevices::GetAbsoluteLogFilename();
 	logfile = FPaths::ConvertRelativePathToFull(logfile);
 #if PLATFORM_WINDOWS
 	sentry_options_add_attachmentw(options, *logfile);
