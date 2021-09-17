@@ -74,7 +74,6 @@ void FSentryOutputDevice::StaticSerialize(const TCHAR* V, ELogVerbosity::Type Ve
 	sentry_add_breadcrumb(crumb);
 }
 
-
 // The ErrorOutputDevice is used by Assert handlers.  Use this to capture the assert message and send it to Sentry.
 void FSentryErrorOutputDevice::Serialize(const TCHAR* V, ELogVerbosity::Type Verbosity, const class FName& Category)
 {
@@ -166,6 +165,16 @@ bool USentryClientConfig::GetEnvOrCmdLine(const TCHAR* name, FString& out)
 	return false;
 }
 
+FString USentryClientConfig::GetConfig(const TCHAR *name, const TCHAR *default)
+{
+	FString result;
+	if (GetEnvOrCmdLine(name, result))
+	{
+		return result;
+	}
+	return default;
+}
+
 bool USentryClientConfig::IsEnabled()
 {
 	// command line or env can override
@@ -202,30 +211,17 @@ bool USentryClientConfig::ShouldDisable()
 
 FString USentryClientConfig::GetDSN()
 {
-	FString val;
-	
-	if (!GetEnvOrCmdLine(TEXT("DSN"), val))
-	{
-		// no command line option, use dsn
-		val = Get()->DSN;
-	}
-	return val;
+	return GetConfig(TEXT("DSN"), *Get()->DSN);
 }
 
 FString USentryClientConfig::GetEnvironment()
 {
-	FString val = GetEnvOrCmdLine(TEXT("ENVIRONMENT"));
-	if (val.IsEmpty())
-		val = Get()->Environment;
-	return val;
+	return GetConfig(TEXT("ENVIRONMENT"), *Get()->Environment);
 }
 
 FString USentryClientConfig::GetRelease()
 {
-	FString val = GetEnvOrCmdLine(TEXT("RELEASE"));
-	if (val.IsEmpty())
-		val = Get()->Release;
-	return val;
+	return GetConfig(TEXT("RELEASE"), *Get()->Release);
 }
 
 bool USentryClientConfig::IsConsentRequired()
@@ -244,6 +240,31 @@ bool USentryClientConfig::IsConsentRequired()
 	if (val.Equals(TEXT("on"), ESearchCase::IgnoreCase) == 0)
 		return true;
 	return false;
+}
+
+TMap<FString, FString> USentryClientConfig::GetTags()
+{
+	FString val = GetConfig(TEXT("TAGS"), *Get()->Tags);
+	
+	// 1: split on commas, ignore empty values (allows trailing or leading commas)
+	TArray<FString> tags;
+	val.ParseIntoArray(tags, TEXT(","), true);
+
+	// 2 construct the output mpa
+	TMap<FString, FString> tagmap;
+	for(auto &tag : tags)
+	{
+		FString key, value;
+		if (tag.Split(TEXT("="), &key, &value))
+		{
+			tagmap.Emplace(key.TrimStartAndEnd(), value.TrimStartAndEnd());
+		}
+		else
+		{
+			tagmap.Emplace(tag.TrimStartAndEnd(), TEXT(""));
+		}
+	}
+	return tagmap;
 }
 
 
@@ -285,6 +306,13 @@ void FSentryClientModule::StartupModule()
 		// Set some default information (username, hostname)
 		USentryBlueprintLibrary::SetUser(FString(), UKismetSystemLibrary::GetPlatformUserName(), FString());
 		USentryBlueprintLibrary::SetTag(TEXT("hostname"), FPlatformProcess::ComputerName());
+
+		// additional tags passed from command line
+		auto tagmap = USentryClientConfig::GetTags();
+		for(auto &elem : tagmap)
+		{
+			USentryBlueprintLibrary::SetTag(elem.Key, elem.Value);
+		}
 	}
 }
 
@@ -369,7 +397,6 @@ if (CrashPadLocation.IsEmpty())
 
 	// Consent handling
 	sentry_options_set_require_user_consent(options, IsConsentRequired);
-
 
 	// create a sentry transport
 	sentry_options_set_transport(options, FSentryTransport::New());

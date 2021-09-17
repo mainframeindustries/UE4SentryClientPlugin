@@ -139,9 +139,13 @@ public:
 	UPROPERTY(Config);
 	bool ConsentRequired = false;
 
+	UPROPERTY(Config);
+	FString Tags;	// comma separated list of key=value tags
+
 	// return an environment or command line option.  Return true if found.
 	static bool GetEnvOrCmdLine(const TCHAR* name, FString &out);
 	static FString GetEnvOrCmdLine(const TCHAR* name);
+	static FString GetConfig(const TCHAR* name, const TCHAR *default);
 
 	static bool IsEnabled();
 	static bool ShouldDisable();
@@ -149,6 +153,8 @@ public:
 	static FString GetEnvironment();
 	static FString GetRelease();
 	static bool IsConsentRequired();
+	// get tags passed as env or command line
+	static TMap<FString, FString> GetTags();
 
 	static USentryClientConfig* Get() { return CastChecked<USentryClientConfig>(USentryClientConfig::StaticClass()->GetDefaultObject()); }
 };
