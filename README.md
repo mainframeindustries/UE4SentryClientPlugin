@@ -74,6 +74,8 @@ the Debug windows CRT, which is incompatible with UE. UnrealEngine 4.26 uses Vis
 6. Run `cmake --build build --config RelWithDebInfo` to build the binaries (do not specify --parallel, it will only build the `Debug` config)
 7. Run `cmake --install build --prefix ../../../Binaries/ThirdParty/sentry-native/Win64 --config RelWithDebInfo`
 
+A batch file which performs the above steps is available in `Source/ThirdParty/build_win.cmd`
+
 ### Building for Linux
 This follows much the same steps as above, except that the `install` folder should be `Linux` instead of `Win64`
 You need a minimum version of `CMake 3.12` for this to work.  In case of problems running the first
