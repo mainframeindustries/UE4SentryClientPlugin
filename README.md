@@ -91,3 +91,5 @@ crashpad handler is out of process and uploads immediately, rather than during t
        -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-stdlib=libc++"`
 3. Run `cmake --build build-linux --config RelWithDebInfo --parallel`
 4. Run `cmake --install build-linux --prefix ../../../Binaries/ThirdParty/sentry-native/Linux --config RelWithDebInfo`
+
+A shell script which performs the above is available in `Source/ThirdParty/build_linux.sh`

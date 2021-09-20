@@ -24,7 +24,7 @@ extern "C" {
 
 /* SDK Version */
 #define SENTRY_SDK_NAME "sentry.native"
-#define SENTRY_SDK_VERSION "0.4.10"
+#define SENTRY_SDK_VERSION "0.4.12"
 #define SENTRY_SDK_USER_AGENT SENTRY_SDK_NAME "/" SENTRY_SDK_VERSION
 
 /* common platform detection */
@@ -469,9 +469,12 @@ typedef struct sentry_ucontext_s {
  *
  * If the address is given in `addr` the stack is unwound form there.
  * Otherwise (NULL is passed) the current instruction pointer is used as
- * start address. The stack trace is written to `stacktrace_out` with up to
- * `max_len` frames being written.  The actual number of unwound stackframes
- * is returned.
+ * start address.
+ * Unwinding with a given `addr` is not supported on all platforms.
+ *
+ * The stack trace in the form of instruction-addresses, is written to the
+ * caller allocated `stacktrace_out`, with up to `max_len` frames being written.
+ * The actual number of unwound stackframes is returned.
  */
 SENTRY_EXPERIMENTAL_API size_t sentry_unwind_stack(
     void *addr, void **stacktrace_out, size_t max_len);
@@ -479,8 +482,12 @@ SENTRY_EXPERIMENTAL_API size_t sentry_unwind_stack(
 /**
  * Unwinds the stack from the given context.
  *
- * The stack trace is written to `stacktrace_out` with up to `max_len` frames
- * being written.  The actual number of unwound stackframes is returned.
+ * The caller is responsible to construct an appropriate `sentry_ucontext_t`.
+ * Unwinding from a user context is not supported on all platforms.
+ *
+ * The stack trace in the form of instruction-addresses, is written to the
+ * caller allocated `stacktrace_out`, with up to `max_len` frames being written.
+ * The actual number of unwound stackframes is returned.
  */
 SENTRY_EXPERIMENTAL_API size_t sentry_unwind_stack_from_ucontext(
     const sentry_ucontext_t *uctx, void **stacktrace_out, size_t max_len);
@@ -998,6 +1005,19 @@ SENTRY_API void sentry_options_set_database_pathw(
  */
 SENTRY_API void sentry_options_set_system_crash_reporter_enabled(
     sentry_options_t *opts, int enabled);
+
+/**
+ * Sets the maximum time (in milliseconds) to wait for the asynchronous tasks to
+ * end on shutdown, before attempting a forced termination.
+ */
+SENTRY_API void sentry_options_set_shutdown_timeout(
+    sentry_options_t *opts, uint64_t shutdown_timeout);
+
+/**
+ * Gets the maximum time (in milliseconds) to wait for the asynchronous tasks to
+ * end on shutdown, before attempting a forced termination.
+ */
+SENTRY_API uint64_t sentry_options_get_shutdown_timeout(sentry_options_t *opts);
 
 /* -- Global APIs -- */
 
