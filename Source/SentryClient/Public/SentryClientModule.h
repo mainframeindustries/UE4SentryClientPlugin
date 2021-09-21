@@ -145,7 +145,7 @@ public:
 	// return an environment or command line option.  Return true if found.
 	static bool GetEnvOrCmdLine(const TCHAR* name, FString &out);
 	static FString GetEnvOrCmdLine(const TCHAR* name);
-	static FString GetConfig(const TCHAR* name, const TCHAR *default);
+	static FString GetConfig(const TCHAR* name, const TCHAR *defaultval);
 
 	static bool IsEnabled();
 	static bool ShouldDisable();

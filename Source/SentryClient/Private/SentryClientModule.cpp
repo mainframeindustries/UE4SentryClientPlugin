@@ -165,14 +165,14 @@ bool USentryClientConfig::GetEnvOrCmdLine(const TCHAR* name, FString& out)
 	return false;
 }
 
-FString USentryClientConfig::GetConfig(const TCHAR *name, const TCHAR *default)
+FString USentryClientConfig::GetConfig(const TCHAR *name, const TCHAR *defaultval)
 {
 	FString result;
 	if (GetEnvOrCmdLine(name, result))
 	{
 		return result;
 	}
-	return default;
+	return defaultval;
 }
 
 bool USentryClientConfig::IsEnabled()
