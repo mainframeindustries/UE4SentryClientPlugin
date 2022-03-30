@@ -1,12 +1,6 @@
 #pragma once
 
-#if PLATFORM_WINDOWS
-#include "Windows/AllowWindowsPlatformTypes.h"
-#endif
-#include "sentry.h"
-#if PLATFORM_WINDOWS
-#include "Windows/HideWindowsPlatformTypes.h"
-#endif
+#include "SentryCore.h"
 
 #include "CoreMinimal.h"
 #include "Interfaces/IHttpRequest.h"
