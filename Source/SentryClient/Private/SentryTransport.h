@@ -6,6 +6,7 @@
 #include "Interfaces/IHttpRequest.h"
 #include "HAL/CriticalSection.h"
 
+#if SENTRY_HAVE_PLATFORM
 
 class FSentryTransport : public TSharedFromThis<FSentryTransport, ESPMode::ThreadSafe>
 {
@@ -69,3 +70,5 @@ private:
 	// pointers while still controlling lifetime from the sdk lib
 	TSharedPtr<FSentryTransport, ESPMode::ThreadSafe> Self;
 };
+
+#endif

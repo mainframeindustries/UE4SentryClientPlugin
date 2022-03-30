@@ -3,9 +3,9 @@
 // include the sentry client if we have it
 
 
-#define PLATFORM_HAS_SENTRY 1
+#define SENTRY_HAVE_PLATFORM 1
 
-#if PLATFORM_HAS_SENTRY
+#if SENTRY_HAVE_PLATFORM
 
 #if PLATFORM_WINDOWS
 #include "Windows/AllowWindowsPlatformTypes.h"

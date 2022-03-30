@@ -39,6 +39,7 @@ void FSentryOutputDevice::Serialize(const TCHAR* V, ELogVerbosity::Type Verbosit
 
 void FSentryOutputDevice::StaticSerialize(const TCHAR* V, ELogVerbosity::Type Verbosity, const class FName& Category)
 {
+#if SENTRY_HAVE_PLATFORM
 
 	auto crumb = sentry_value_new_breadcrumb("debug", TCHAR_TO_UTF8(V));
 
@@ -72,6 +73,7 @@ void FSentryOutputDevice::StaticSerialize(const TCHAR* V, ELogVerbosity::Type Ve
 	}
 
 	sentry_add_breadcrumb(crumb);
+#endif
 }
 
 // The ErrorOutputDevice is used by Assert handlers.  Use this to capture the assert message and send it to Sentry.
@@ -93,6 +95,7 @@ void FSentryErrorOutputDevice::HandleError()
 	}
 }
 
+#if SENTRY_HAVE_PLATFORM
 
 static void _SentryLog(sentry_level_t level, const char* message, va_list args, void* userdata)
 {
@@ -126,6 +129,8 @@ static sentry_value_t SentryEventFunction(sentry_value_t event, void* hint, void
 	}
 	return event;
 }
+
+#endif
 
 
 FString USentryClientConfig::GetEnvOrCmdLine(const TCHAR* name)
@@ -270,6 +275,7 @@ TMap<FString, FString> USentryClientConfig::GetTags()
 
 void FSentryClientModule::StartupModule()
 {
+#if SENTRY_HAVE_PLATFORM
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 	
 	// plugin settings are generally accessed, in increased priority, from:
@@ -314,6 +320,9 @@ void FSentryClientModule::StartupModule()
 			USentryBlueprintLibrary::SetTag(elem.Key, elem.Value);
 		}
 	}
+#else
+	UE_LOG(LogSentryClient, Log, TEXT("Module startup: dummy version, platform not supported"));
+#endif
 }
 
 void FSentryClientModule::ShutdownModule()
@@ -325,9 +334,11 @@ void FSentryClientModule::ShutdownModule()
 
 bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment, const TCHAR* Release, bool IsConsentRequired)
 {
+#if SENTRY_HAVE_PLATFORM
 	if (initialized)
 		SentryClose();
 	check(DSN != nullptr);
+
 
 	sentry_options_t* options = sentry_options_new();
 
@@ -437,10 +448,14 @@ if (CrashPadLocation.IsEmpty())
 		UE_LOG(LogSentryClient, Warning, TEXT("Failed to initialize, code %d"), fail);
 	}
 	return initialized;
+#else // SENTRY_HAVE_PLATFORM
+	return false;
+#endif
 }
 
 void FSentryClientModule::SentryClose()
 {
+#if SENTRY_HAVE_PLATFORM
 	if (initialized)
 	{
 		if (GLog)
@@ -459,6 +474,7 @@ void FSentryClientModule::SentryClose()
 		}
 	}
 	initialized = false;
+#endif
 }
 
 FSentryClientModule* FSentryClientModule::Get()
@@ -469,6 +485,8 @@ FSentryClientModule* FSentryClientModule::Get()
 
 void FSentryClientModule::SentryLog(int level, const char* message, va_list args)
 {
+#if SENTRY_HAVE_PLATFORM
+
 	ANSICHAR buf[512];
 	auto formatted = FCStringAnsi::GetVarArgs(buf, sizeof(buf), message, args);
 	const char* tlevel = "";
@@ -506,10 +524,13 @@ void FSentryClientModule::SentryLog(int level, const char* message, va_list args
 	// also output to stdandard error, since the log subsystem may have crashed
 	fprintf(out, "Sentry [%s] : %s\n", tlevel, buf);
 	fflush(out);
+#endif
 }
 
 void FSentryClientModule::SetupContext()
 {
+#if SENTRY_HAVE_PLATFORM
+
 	// Add an "app" context, as described https://develop.sentry.dev/sdk/event-payloads/contexts/
 	auto value = sentry_value_new_object();
 	sentry_value_set_by_key(value, "type", sentry_value_new_string("app"));
@@ -571,6 +592,7 @@ void FSentryClientModule::SetupContext()
 	sentry_set_tag("unreal.target_type", TCHAR_TO_ANSI(TargetType));
 	sentry_set_tag("unreal.configuration", TCHAR_TO_ANSI(Configuration));
 	sentry_set_tag("unreal.is_game", FApp::IsGame() ? "true" : "false");
+#endif
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -8,6 +8,7 @@
 #include "HAL/PlatformTime.h"
 
 
+#if SENTRY_HAVE_PLATFORM
 
 sentry_transport_t* FSentryTransport::New() {
 	sentry_transport_t* transport;
@@ -174,3 +175,5 @@ void FSentryTransport::OnComplete(TSharedPtr<IHttpRequest, ESPMode::ThreadSafe> 
 		++Index;
 	}
 }
+
+#endif // SENTRY_HAVE_PLATFORM

@@ -7,6 +7,12 @@
 #include "BlueprintLib.generated.h"
 
 
+#if !SENTRY_HAVE_PLATFORM
+// need a dummy sentry value
+class sentry_value_t
+{};
+#endif
+
 // various enums
 
 UENUM(BlueprintType)
@@ -67,7 +73,6 @@ public:
 	USentryValue();
 	USentryValue(sentry_value_t);
 	~USentryValue();
-
 
 
 	/**
@@ -136,6 +141,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Sentry|Value")
 	void Set(const FString &key, USentryValue* value);
 
+#if SENTRY_HAVE_PLATFORM
 	/* transfer refernce out of object.  set null object inside*/
 	sentry_value_t Transfer();
 	/* get new reference for object inside */
@@ -146,6 +152,7 @@ public:
 
 private:
 	sentry_value_t value;
+#endif
 };
 
 
@@ -279,10 +286,5 @@ public:
 	static void AddValueBreadcrumb(ESentryBreadcrumbType type, const FString& message,
 			const FString& _category, ESentryLevel level, USentryValue *value);
 
-	// helper function
-	static sentry_value_t BreadCrumb(ESentryBreadcrumbType type, const FString& message,
-		const FString& _category, ESentryLevel level);
-
 
 };
-
