@@ -162,9 +162,13 @@ class USentryBlueprintLibrary : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 public:
 
-	
+	// Is the plugin initialized
 	UFUNCTION(BlueprintPure, Category = "Sentry")
 	static bool IsInitialized();
+
+	// Is the plugin implemented for the current platform?
+	UFUNCTION(BlueprintPure, Category = "Sentry")
+	static bool IsImplemented();
 
 	// Initialize the sentry client
 	UFUNCTION(BlueprintCallable, Category = "Sentry")

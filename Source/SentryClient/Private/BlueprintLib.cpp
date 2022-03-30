@@ -169,6 +169,16 @@ bool USentryBlueprintLibrary::IsInitialized()
 }
 
 
+bool USentryBlueprintLibrary::IsImplemented()
+{
+#if SENTRY_HAVE_PLATFORM
+	return true;
+#else
+	return false;
+#endif
+}
+
+
 bool USentryBlueprintLibrary::Initialize(const FString& DSN, const FString& Environment, const FString& Release, bool IsConsentRequired)
 
 {
