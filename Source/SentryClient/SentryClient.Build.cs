@@ -15,15 +15,15 @@ public class SentryClient : ModuleRules
 				// ... add public include paths required here ...
 			}
 			);
-				
-		
+
+
 		PrivateIncludePaths.AddRange(
 			new string[] {
 				// ... add other private include paths required here ...
 			}
 			);
-			
-		
+
+
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
@@ -31,8 +31,8 @@ public class SentryClient : ModuleRules
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
-			
-		
+
+
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
@@ -45,8 +45,8 @@ public class SentryClient : ModuleRules
 				"HTTP",
 			}
 			);
-		
-		
+
+
 		DynamicallyLoadedModuleNames.AddRange(
 			new string[]
 			{
@@ -56,13 +56,16 @@ public class SentryClient : ModuleRules
 
 		// The root part of the installed sdk (includes/binaries)
 		string SentryRoot = Path.Combine(PluginDirectory, "Binaries/ThirdParty/sentry-native");
-		string SentryPlatform="";
+		string SentryPlatform = "";
 		string[] SentryLibs = { };
+		bool SentryHavePlatform = false;
+		bool SentryDisable = false;  // for internal testing
 
-		if (Target.Platform == UnrealTargetPlatform.Win64)
+		if (!SentryDisable && Target.Platform == UnrealTargetPlatform.Win64)
 		{
+			SentryHavePlatform = true;
 			SentryPlatform = Path.Combine(SentryRoot, "Win64");
-			SentryLibs = 
+			SentryLibs =
 				new string[]
 				{
 					"sentry.lib",
@@ -80,8 +83,9 @@ public class SentryClient : ModuleRules
 			PublicSystemLibraries.Add("dbghelp.lib");
 			RuntimeDependencies.Add(Path.Combine(SentryPlatform, "bin", "crashpad_handler.exe"));
 		}
-		else if (Target.Platform == UnrealTargetPlatform.Linux)
+		else if (!SentryDisable && Target.Platform == UnrealTargetPlatform.Linux)
 		{
+			SentryHavePlatform = true;
 			SentryPlatform = Path.Combine(SentryRoot, "Linux");
 			SentryLibs =
 				new string[]
@@ -99,17 +103,20 @@ public class SentryClient : ModuleRules
 			RuntimeDependencies.Add(Path.Combine(SentryPlatform, "bin", "crashpad_handler"));
 		}
 		else
-        {
+		{
 			; // not supported
-        }
+		}
 
-		// anyone including this library can use the sentry api
-		PublicIncludePaths.Add(Path.Combine(SentryPlatform, "include"));
-		// sentry header file needs thef following since we use static libs
-		PublicDefinitions.Add("SENTRY_BUILD_STATIC=1");
+		if (SentryHavePlatform)
+		{ 
+			// anyone including this library can use the sentry api
+			PublicIncludePaths.Add(Path.Combine(SentryPlatform, "include"));
+			// sentry header file needs thef following since we use static libs
+			PublicDefinitions.Add("SENTRY_BUILD_STATIC=1");
 
-		foreach (string lib in SentryLibs) {
-			PublicAdditionalLibraries.Add(Path.Combine(SentryPlatform, "lib", lib));
+			foreach (string lib in SentryLibs) {
+				PublicAdditionalLibraries.Add(Path.Combine(SentryPlatform, "lib", lib));
+			}
 		}
 	}
 }

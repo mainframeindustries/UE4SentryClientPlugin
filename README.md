@@ -5,6 +5,10 @@ An UnrealEngine plugin for the Sentry crash reporting service (https://github.co
 This plugin implements crash handling using sentry.  It also exposes blueprint functions to communicate
 with the native sdk 
 
+## Platforms
+This plugin is supported on Windows and Linux.  For other platforms, the plugin provides
+a dummy implementation.
+
 ## Configuration
 the usual environment variables such as `SENTRY_DSN` can be used.  In addition
 command line flags can be used, such as -SENTRY_DSN=https://foo
