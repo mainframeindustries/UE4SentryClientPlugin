@@ -29,6 +29,10 @@ private:
 	{
 		return static_cast<FSentryTransport*>(state)->startup_func(options);
 	}
+	static int _flush_func(uint64_t timeout, void* state)
+	{
+		return static_cast<FSentryTransport*>(state)->flush_func(timeout);
+	}
 	static int _shutdown_func(uint64_t timeout, void* state)
 	{
 		return static_cast<FSentryTransport*>(state)->shutdown_func(timeout);
@@ -40,6 +44,7 @@ private:
 
 	void send_func(sentry_envelope_t* envelope);
 	int startup_func(const sentry_options_t* options);
+	int flush_func(uint64_t timeout);
 	int shutdown_func(uint64_t timeout);
 	void free_func();
 
@@ -69,6 +74,9 @@ private:
 	// we own a reference to ourself.  This allows the use of shared
 	// pointers while still controlling lifetime from the sdk lib
 	TSharedPtr<FSentryTransport, ESPMode::ThreadSafe> Self;
+
+	// is this transport started or stopped
+	bool Started = false;
 };
 
 #endif

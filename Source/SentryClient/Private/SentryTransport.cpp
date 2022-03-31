@@ -25,6 +25,7 @@ sentry_transport_t* FSentryTransport::New() {
 	
 	sentry_transport_set_state(transport, (void*)&Self.Get());
 	sentry_transport_set_startup_func(transport, _startup_func);
+	sentry_transport_set_flush_func(transport, _flush_func);
 	sentry_transport_set_shutdown_func(transport, _shutdown_func);
 	sentry_transport_set_free_func(transport, _free_func);
 	
@@ -70,6 +71,10 @@ void FSentryTransport::ParseDSN(const FString &dsn)
 
 void FSentryTransport::send_func(sentry_envelope_t* envelope)
 {
+	if (!Started)
+	{
+		return;
+	}
 	auto HttpRequest = FHttpModule::Get().CreateRequest();
 	HttpRequest->SetURL(sentry_url);
 	HttpRequest->SetVerb(TEXT("POST"));
@@ -115,10 +120,11 @@ int FSentryTransport::startup_func(const sentry_options_t* options)
 {
 	FString dsn = ANSI_TO_TCHAR(sentry_options_get_dsn(options));
 	ParseDSN(dsn);
+	Started = true;
 	return 0;
 }
 
-int FSentryTransport::shutdown_func(uint64_t timeout_ms)
+int FSentryTransport::flush_func(uint64_t timeout_ms)
 {
 	// flush the transport.
 	// We must tick our requests ourselves, can't rely on game thread for that
@@ -152,6 +158,13 @@ int FSentryTransport::shutdown_func(uint64_t timeout_ms)
 	}
 
 	return 0;
+}
+
+
+int FSentryTransport::shutdown_func(uint64_t timeout_ms)
+{
+	Started = false;
+	return flush_func(timeout_ms);
 }
 
 void FSentryTransport::free_func()
