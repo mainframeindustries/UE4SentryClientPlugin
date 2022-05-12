@@ -149,6 +149,8 @@ public:
 	static bool IsConsentRequired();
 	// get tags passed as env or command line
 	static TMap<FString, FString> GetTags();
+	// get Database path
+	static FString GetDatabasePath();
 
 	static USentryClientConfig* Get() { return CastChecked<USentryClientConfig>(USentryClientConfig::StaticClass()->GetDefaultObject()); }
 };

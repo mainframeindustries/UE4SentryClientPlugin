@@ -157,19 +157,22 @@ bool USentryClientConfig::GetEnvOrCmdLine(const TCHAR* name, FString& out)
 {
 	// check if there is a command line flag, of the format -SENTRY_name= or -SENTRY-name=
 	FString cmd;
-	if (FParse::Value(FCommandLine::Get(), *FString::Printf(TEXT("-SENTRY_%s="), name), cmd))
+	FString key = FString::Printf(TEXT("SENTRY_%s"), name);
+	if (FParse::Value(FCommandLine::Get(), *FString::Printf(TEXT("-%s="), *key), cmd))
 	{
 		out = cmd;
 		return true;
 	}
-	if (FParse::Value(FCommandLine::Get(), *FString::Printf(TEXT("-SENTRY-%s="), name), cmd))
+	// try with hyphens instead of underscore
+	FString altkey = key.Replace(TEXT("_"), TEXT("-"));
+	if (FParse::Value(FCommandLine::Get(), *FString::Printf(TEXT("-%s="), *altkey), cmd))
 	{
 		out = cmd;
 		return true;
 	}
 	// empty string here is ambiguous, can mean not found, or set to empty string.
 	// let's define empty env var as not exisiting.
-	cmd = FPlatformMisc::GetEnvironmentVariable(*FString::Printf(TEXT("SENTRY_%s"), name));
+	cmd = FPlatformMisc::GetEnvironmentVariable(*key);
 	if (!cmd.IsEmpty())
 	{
 		// Trim whitespace from end.  This way, you can set an env var to whitespace, to mean 'empty' but existing
@@ -187,7 +190,7 @@ FString USentryClientConfig::GetConfig(const TCHAR *name, const TCHAR *defaultva
 	{
 		return result;
 	}
-	return defaultval;
+	return defaultval ? defaultval : TEXT("");
 }
 
 bool USentryClientConfig::IsEnabled()
@@ -237,6 +240,11 @@ FString USentryClientConfig::GetEnvironment()
 FString USentryClientConfig::GetRelease()
 {
 	return GetConfig(TEXT("RELEASE"), *Get()->Release);
+}
+
+FString USentryClientConfig::GetDatabasePath()
+{
+	return GetConfig(TEXT("DATABASE_PATH"), nullptr);
 }
 
 bool USentryClientConfig::IsConsentRequired()
@@ -352,7 +360,13 @@ bool FSentryClientModule::SentryInit(const TCHAR* DSN, const TCHAR* Environment,
 
 	sentry_options_t* options = sentry_options_new();
 
-	// Database location in the game's Saved folder
+	// Database location.  Pull in a config env var
+	FString ConfigDBPath = USentryClientConfig::GetDatabasePath();
+	if (!ConfigDBPath.IsEmpty())
+	{
+		dbPath = ConfigDBPath;
+	}
+	// Default database location in the game's Saved folder
 	if (dbPath.IsEmpty())
 	{
 		dbPath = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("sentry-native"));
@@ -427,7 +441,7 @@ if (CrashPadLocation.IsEmpty())
 
 	// Todo: set up a thing to add log breadcrumbs
 
-	UE_LOG(LogSentryClient, Log, TEXT("Initializing with DSN '%s'"), 
+	UE_LOG(LogSentryClient, Log, TEXT("Initializing with DSN '%s', env='%s', rel='%s'"), 
 		DSN, Environment ? Environment : TEXT(""), Release ? Release : TEXT(""));
 	int fail = sentry_init(options);
 	if (!fail)
@@ -526,14 +540,14 @@ void FSentryClientModule::SentryLog(int level, const char* message, va_list args
 		tlevel = "fatal";
 		break;
 	}
-	FILE* out = stdout;
 	if (level > (int)SENTRY_LEVEL_DEBUG)
 	{
-		out = stderr;
+		// also output to standard error, since the log subsystem may have crashed
+		// if we are here during error handling
+		FILE* out = stderr;
+		fprintf(out, "Sentry [%s] : %s\n", tlevel, buf);
+		fflush(out);
 	}
-	// also output to stdandard error, since the log subsystem may have crashed
-	fprintf(out, "Sentry [%s] : %s\n", tlevel, buf);
-	fflush(out);
 #endif
 }
 
