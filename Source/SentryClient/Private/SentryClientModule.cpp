@@ -540,7 +540,12 @@ void FSentryClientModule::SentryLog(int level, const char* message, va_list args
 		tlevel = "fatal";
 		break;
 	}
-	if (level > (int)SENTRY_LEVEL_DEBUG)
+	// disable this.  We don't want duplicate logs during init. Once
+	// we get an api to know we are handling a crash, we can decide to channel
+	// all logs to stderr at that point (progress during crash handling is reported
+	// at INFO level.
+#if 0 
+	if (level >= (int)SENTRY_LEVEL_INFO)
 	{
 		// also output to standard error, since the log subsystem may have crashed
 		// if we are here during error handling
@@ -548,6 +553,7 @@ void FSentryClientModule::SentryLog(int level, const char* message, va_list args
 		fprintf(out, "Sentry [%s] : %s\n", tlevel, buf);
 		fflush(out);
 	}
+#endif
 #endif
 }
 
