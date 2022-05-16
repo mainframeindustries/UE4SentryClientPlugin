@@ -107,14 +107,12 @@ static sentry_value_t SentryEventFunction(sentry_value_t event, void* hint, void
 {
 
 	// if the level is anything but "fatal", just pass this on.
-	auto level = sentry_value_get_by_key(event, "level");
+	auto level = sentry_value_get_by_key(event, "level"); // returns borrowed ref
 	const char* levelstr = sentry_value_as_string(level);
 	if (!levelstr || strcmp(levelstr, "fatal"))
 	{
-		sentry_value_decref(level);
 		return event;
 	}
-	sentry_value_decref(level);
 
 #if 0
 	// We can just defer to the Error handler if we want here, get the dialogue box and everything...
