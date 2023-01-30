@@ -20,8 +20,12 @@
 DEFINE_LOG_CATEGORY(LogSentryClient);
 DEFINE_LOG_CATEGORY(LogSentryCore);
 
-// Define this as 1 if your UnrealEngine can control crash handler settings.
+// Crash handling disableing was added in UE 5.1
+#if ENGINE_MAJOR_VERSION > 3 || (ENGINE_MAJOR_VERSION == 3 && ENGINE_MINOR_VERSION >= 1)	
+#define HAVE_CRASH_HANDLING_THING 1
+#else
 #define HAVE_CRASH_HANDLING_THING 0
+#endif
 
 FSentryErrorOutputDevice FSentryClientModule::ErrorDevice = FSentryErrorOutputDevice();
 
@@ -462,7 +466,7 @@ if (CrashPadLocation.IsEmpty())
 
 #if HAVE_CRASH_HANDLING_THING
 		// instruct UE not to try to do crash handling itself
-		FPlatformMisc::SetCrashHandling(ECrashHandlingType::Disabled);
+		FPlatformMisc::SetCrashHandlingType(ECrashHandlingType::Disabled);
 #endif
 	}
 	else

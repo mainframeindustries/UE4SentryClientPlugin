@@ -45,9 +45,12 @@ SuperDuperGame.exe -SENTRY_ENVIRONMENT=TENTATIVE_DEBUG -SENTRY_CONSENT_REQUIRED=
 ```
 
 ##  Note:
-For crash handling on Windows, the Unreal Engine mush have a certain patch to disable the
-Windows native Structured Execption Handling hooks that UE uses.  There is a Pull Request
-active with Epic games for this (https://github.com/EpicGames/UnrealEngine/pull/7976)
+For crash handling on Windows, UnrealEngine 5.1 or later must be used.  This version
+allows the plugin to take over crash handling from the engine's own handlers.
+
+For an older engine, a patch needs to be applied to the engine source code.
+There is a Pull Request for UnrealEngine which accomplishes this:
+https://github.com/EpicGames/UnrealEngine/pull/7976)
 If your engine is patched in that way, you can  `#define HAVE_CRASH_HANDLING_THING 1`
 in the file `SentryClientModule.cpp`
 
