@@ -45,11 +45,17 @@ SuperDuperGame.exe -SENTRY_ENVIRONMENT=TENTATIVE_DEBUG -SENTRY_CONSENT_REQUIRED=
 ```
 
 ##  Note:
-For crash handling on windows, the Unreal Engine mush have a certain patch to disable the
+For crash handling on Windows, the Unreal Engine mush have a certain patch to disable the
 Windows native Structured Execption Handling hooks that UE uses.  There is a Pull Request
 active with Epic games for this (https://github.com/EpicGames/UnrealEngine/pull/7976)
 If your engine is patched in that way, you can  `#define HAVE_CRASH_HANDLING_THING 1`
 in the file `SentryClientModule.cpp`
+
+## Run-time requirements
+
+The `crashpad` backend used for Linux requires C++ runtime to be installed.  Use `apt install libc++`
+or similar to install it.  Currently the `sentry-native` package does not support statick linking of
+this executable.
 
 ## Updating the sentry-native binaries
 The sentry-native sdk is a submodule at `SentryClient/Source/ThirdParty/sentry-native`.
