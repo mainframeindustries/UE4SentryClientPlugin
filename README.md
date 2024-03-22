@@ -57,7 +57,7 @@ in the file `SentryClientModule.cpp`
 ## Run-time requirements
 
 The `crashpad` backend used for Linux requires C++ runtime to be installed.  Use `apt install libc++`
-or similar to install it.  Currently the `sentry-native` package does not support statick linking of
+or similar to install it.  Currently the `sentry-native` package does not support static linking of
 this executable.
 
 ## Updating the sentry-native binaries
@@ -88,12 +88,15 @@ the Debug windows CRT, which is incompatible with UE. UnrealEngine 4.26 uses Vis
 7. Run `cmake --install build --prefix ../../../Binaries/ThirdParty/sentry-native/Win64 --config RelWithDebInfo`
 
 A batch file which performs the above steps is available in `Source/ThirdParty/build_win.cmd`
+A separate one, `build_win-bp.cmd` configures and builds the `breakpad` in-process crash handler
+for games that need that.  Note that this handler will only upload crashes the next time the
+game is launched.
 
 ### Building for Linux
 This follows much the same steps as above, except that the `install` folder should be `Linux` instead of `Win64`
 You need a minimum version of `CMake 3.12` for this to work.  In case of problems running the first
 step, try upgrading cmake.  We will use the `crashpad` backend for linux, instead of the default `breakpad` since the
-crashpad handler is out of process and uploads immediately, rather than during the next run.  This is important for linux servers.
+crashpad handler is out of process and uploads immediately, rather than during the next run.  This is important for linux servers, particulary in containers, where the server may not be run again in the same place (and thus, the delayed uploading of the crash will not occur.)
 1. Install compilation prerequisites, such as `build-essential` along with other libs: `zlib-dev`,`libssl-dev`, `libc++-dev`,
    `libc++abi-dev`, `clang`.  This varies according to your distro.
 2. `cd` to `Source/ThirdParty/sentry-native`
