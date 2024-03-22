@@ -21,7 +21,7 @@ DEFINE_LOG_CATEGORY(LogSentryClient);
 DEFINE_LOG_CATEGORY(LogSentryCore);
 
 // Crash handling disableing was added in UE 5.1
-#if ENGINE_MAJOR_VERSION > 3 || (ENGINE_MAJOR_VERSION == 3 && ENGINE_MINOR_VERSION >= 1)	
+#if ENGINE_MAJOR_VERSION > 5 || (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1)	
 #define HAVE_CRASH_HANDLING_THING 1
 #else
 #define HAVE_CRASH_HANDLING_THING 0
@@ -137,7 +137,11 @@ static sentry_value_t SentryEventFunction(sentry_value_t event, void* hint, void
 	{
 		//Panic flush the logs to make sure there are no entries queued. This is
 		//not thread safe so it will skip for example editor log.
+		# if ENGINE_MAJOR_VERSION > 5 || (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1)
+		GLog->Panic();
+		# else
 		GLog->PanicFlushThreadedLogs();
+		# endif
 	}
 	return event;
 }
