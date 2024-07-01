@@ -97,8 +97,8 @@ This follows much the same steps as above, except that the `install` folder shou
 You need a minimum version of `CMake 3.12` for this to work.  In case of problems running the first
 step, try upgrading cmake.  We will use the `crashpad` backend for linux, instead of the default `breakpad` since the
 crashpad handler is out of process and uploads immediately, rather than during the next run.  This is important for linux servers, particulary in containers, where the server may not be run again in the same place (and thus, the delayed uploading of the crash will not occur.)
-1. Install compilation prerequisites, such as `build-essential` along with other libs: `zlib-dev`,`libssl-dev`, `libc++-dev`,
-   `libc++abi-dev`, `clang`.  This varies according to your distro.
+1. Install compilation prerequisites, such as `build-essential` along with other libs: `zlib-dev`, `libc++-dev`,
+   `libc++abi-dev`, `clang`, `libcurl4-openssl-dev`.  This varies according to your distro.  See `CONTRIBUTING.md` in `sentry-native` for info.
 2. `cd` to `Source/ThirdParty/sentry-native`
 3. Delete any pre-existing `build-linux` folder
 2. Run `cmake -B build-linux -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none  \
