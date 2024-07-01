@@ -157,7 +157,7 @@ private:
 
 
 UCLASS()
-class USentryBlueprintLibrary : public UBlueprintFunctionLibrary
+class SENTRYCLIENT_API USentryBlueprintLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:

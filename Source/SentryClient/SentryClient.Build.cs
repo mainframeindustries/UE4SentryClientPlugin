@@ -2,14 +2,19 @@
 
 using UnrealBuildTool;
 using System.IO;  // for path tools
+using System.Linq;
 
 public class SentryClient : ModuleRules
 {
 	public SentryClient(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+#if UE_5_2_OR_LATER
+        IWYUSupport = IWYUSupport.Full;
+#else
 		bEnforceIWYU = true;
-		
+#endif
+
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
@@ -61,46 +66,94 @@ public class SentryClient : ModuleRules
 		bool SentryHavePlatform = false;
 		bool SentryDisable = false;  // for internal testing
 
-		if (!SentryDisable && Target.Platform == UnrealTargetPlatform.Win64)
+		bool bUseCrashPad = true;
+		bool bUseBreakPad = false;
+
+		bool bIsWindows = Target.Platform == UnrealTargetPlatform.Win64;
+		if (bIsWindows)
+		{
+			// if you want to use breakpad instead on windows, the libraries must be rebuild
+			// and the following inverted.
+			bUseCrashPad = true;
+			bUseBreakPad = false;
+		}
+
+		if (!SentryDisable && bIsWindows)
 		{
 			SentryHavePlatform = true;
 			SentryPlatform = Path.Combine(SentryRoot, "Win64");
-			SentryLibs =
-				new string[]
-				{
-					"sentry.lib",
-					"crashpad_client.lib",
-					"crashpad_compat.lib",
-					"crashpad_handler_lib.lib",
-					"crashpad_minidump.lib",
-					"crashpad_snapshot.lib",
-					"crashpad_tools.lib",
-					"crashpad_util.lib",
-					"crashpad_zlib.lib",
-					"mini_chromium.lib",
-				};
+			SentryLibs = new string[]
+			{
+				"sentry.lib",
+			};
+			if (bUseCrashPad)
+			{
+				SentryLibs = SentryLibs.Concat(
+					new string[]
+					{
+						"crashpad_client.lib",
+						"crashpad_compat.lib",
+						"crashpad_handler_lib.lib",
+						"crashpad_minidump.lib",
+						"crashpad_snapshot.lib",
+						"crashpad_tools.lib",
+						"crashpad_util.lib",
+						"crashpad_zlib.lib",
+						"mini_chromium.lib",
+					}
+				).ToArray();
+				RuntimeDependencies.Add(Path.Combine(SentryPlatform, "bin", "crashpad_handler.exe"));
+				RuntimeDependencies.Add(Path.Combine(SentryPlatform, "bin", "crashpad_wer.dll"));
+			}
+			if (bUseBreakPad)
+			{
+				// append an array to SentryLibs
+
+				SentryLibs = SentryLibs.Concat(
+					new string[]
+					{
+						"breakpad_client.lib"
+					}
+				).ToArray() ;
+			}
 			PublicSystemLibraries.Add("version.lib");
 			PublicSystemLibraries.Add("dbghelp.lib");
-			RuntimeDependencies.Add(Path.Combine(SentryPlatform, "bin", "crashpad_handler.exe"));
 		}
 		else if (!SentryDisable && Target.Platform == UnrealTargetPlatform.Linux)
 		{
 			SentryHavePlatform = true;
 			SentryPlatform = Path.Combine(SentryRoot, "Linux");
-			SentryLibs =
-				new string[]
-				{
-					"libsentry.a",
-					"libcrashpad_client.a",
-					"libcrashpad_compat.a",
-					"libcrashpad_handler_lib.a",
-					"libcrashpad_minidump.a",
-					"libcrashpad_snapshot.a",
-					"libcrashpad_tools.a",
-					"libcrashpad_util.a",
-					"libmini_chromium.a",
-				};
-			RuntimeDependencies.Add(Path.Combine(SentryPlatform, "bin", "crashpad_handler"));
+			SentryLibs = new string[]
+			{
+				"libsentry.a",
+			};
+
+			if (bUseCrashPad)
+			{
+				SentryLibs = SentryLibs.Concat(
+					new string[]
+					{
+						"libcrashpad_client.a",
+						"libcrashpad_compat.a",
+						"libcrashpad_handler_lib.a",
+						"libcrashpad_minidump.a",
+						"libcrashpad_snapshot.a",
+						"libcrashpad_tools.a",
+						"libcrashpad_util.a",
+						"libmini_chromium.a",
+					}
+				).ToArray();
+				RuntimeDependencies.Add(Path.Combine(SentryPlatform, "bin", "crashpad_handler"));
+			}
+			if (bUseBreakPad)
+			{
+				SentryLibs = SentryLibs.Concat(
+					new string[]
+					{
+						"libbreakpad_client.a"
+					}
+				).ToArray();
+			}
 		}
 		else
 		{

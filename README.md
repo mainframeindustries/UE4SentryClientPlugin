@@ -88,9 +88,13 @@ the Debug windows CRT, which is incompatible with UE. UnrealEngine 4.26 uses Vis
 7. Run `cmake --install build --prefix ../../../Binaries/ThirdParty/sentry-native/Win64 --config RelWithDebInfo`
 
 A batch file which performs the above steps is available in `Source/ThirdParty/build_win.cmd`
-A separate one, `build_win-bp.cmd` configures and builds the `breakpad` in-process crash handler
+
+#### Using Breakpad on windows
+
+A separate batch file, `build_win-bp.cmd` configures and builds the `breakpad` in-process crash handler
 for games that need that.  Note that this handler will only upload crashes the next time the
-game is launched.
+game is launched.  This will create a different version of `sentry.lib`.  In this case, `SentryClient.build.cs`
+must be modified, to specify that the windows build uses breakpad, see the source code for details.
 
 ### Building for Linux
 This follows much the same steps as above, except that the `install` folder should be `Linux` instead of `Win64`
