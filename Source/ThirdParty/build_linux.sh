@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-cd "$(dirname "$0")/sentry-native"
+pushd "$(dirname "$0")/sentry-native"
 rm -rf build-linux
 cmake -B build-linux -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none  \
        -DSENTRY_BACKEND=crashpad \
@@ -10,3 +10,4 @@ cmake -B build-linux -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -
 
 cmake --build build-linux --config RelWithDebInfo --parallel
 cmake --install build-linux --prefix ../../../Binaries/ThirdParty/sentry-native/Linux --config RelWithDebInfo
+popd

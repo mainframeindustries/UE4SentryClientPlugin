@@ -83,7 +83,7 @@ the Debug windows CRT, which is incompatible with UE. UnrealEngine 4.26 uses Vis
 1. Install cmake, e.g. using `choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'` (see https://chocolatey.org/ for the choco installer)
 2. Open a command shell and enter the `Source/ThirdParty/sentry-native` folder
 3. Delete any pre-existing `build` folder
-4. Run `cmake -G "Visual Studio 16 2019 Win64" -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none` to configure cmake
+4. Run `cmake -G "Visual Studio 17 2022" -A x64 -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none` to configure cmake
 6. Run `cmake --build build --config RelWithDebInfo` to build the binaries (do not specify --parallel, it will only build the `Debug` config)
 7. Run `cmake --install build --prefix ../../../Binaries/ThirdParty/sentry-native/Win64 --config RelWithDebInfo`
 
@@ -97,8 +97,8 @@ This follows much the same steps as above, except that the `install` folder shou
 You need a minimum version of `CMake 3.12` for this to work.  In case of problems running the first
 step, try upgrading cmake.  We will use the `crashpad` backend for linux, instead of the default `breakpad` since the
 crashpad handler is out of process and uploads immediately, rather than during the next run.  This is important for linux servers, particulary in containers, where the server may not be run again in the same place (and thus, the delayed uploading of the crash will not occur.)
-1. Install compilation prerequisites, such as `build-essential` along with other libs: `zlib-dev`,`libssl-dev`, `libc++-dev`,
-   `libc++abi-dev`, `clang`.  This varies according to your distro.
+1. Install compilation prerequisites, such as `build-essential` along with other libs: `zlib-dev`, `libc++-dev`,
+   `libc++abi-dev`, `clang`, `libcurl4-openssl-dev`.  This varies according to your distro.  See `CONTRIBUTING.md` in `sentry-native` for info.
 2. `cd` to `Source/ThirdParty/sentry-native`
 3. Delete any pre-existing `build-linux` folder
 2. Run `cmake -B build-linux -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none  \

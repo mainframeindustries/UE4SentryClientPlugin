@@ -2,7 +2,7 @@
 rem Builds the binaries for windows.  See the Readme.md in the root for details.
 rem note, this selects the 'breakpad' handler instead of the default 'crashpad'
 
-cd %~dp0\sentry-native
+pushd %~dp0\sentry-native
 rem Remove the `build` folder first
 rmdir /s build
 rem configure cmake build
@@ -11,3 +11,4 @@ rem build the files (no parallel, that doesn't work)
 cmake --build build --config RelWithDebInfo
 rem install the binaries
 cmake --install build --prefix ../../../Binaries/ThirdParty/sentry-native/Win64 --config RelWithDebInfo
+popd

@@ -23,8 +23,14 @@ extern "C" {
 #endif
 
 /* SDK Version */
-#define SENTRY_SDK_NAME "sentry.native"
-#define SENTRY_SDK_VERSION "0.4.15"
+#ifndef SENTRY_SDK_NAME
+#    ifdef __ANDROID__
+#        define SENTRY_SDK_NAME "sentry.native.android"
+#    else
+#        define SENTRY_SDK_NAME "sentry.native"
+#    endif
+#endif
+#define SENTRY_SDK_VERSION "0.7.6"
 #define SENTRY_SDK_USER_AGENT SENTRY_SDK_NAME "/" SENTRY_SDK_VERSION
 
 /* common platform detection */
@@ -84,7 +90,7 @@ extern "C" {
 
 /* context type dependencies */
 #ifdef _WIN32
-#    include <wtypes.h>
+#    include <windows.h>
 #else
 #    include <signal.h>
 #endif
@@ -201,6 +207,8 @@ SENTRY_API sentry_value_t sentry_value_new_bool(int value);
  * Creates a new null terminated string.
  */
 SENTRY_API sentry_value_t sentry_value_new_string(const char *value);
+SENTRY_API sentry_value_t sentry_value_new_string_n(
+    const char *value, size_t value_len);
 
 /**
  * Creates a new list value.
@@ -226,10 +234,15 @@ SENTRY_API sentry_value_type_t sentry_value_get_type(sentry_value_t value);
 SENTRY_API int sentry_value_set_by_key(
     sentry_value_t value, const char *k, sentry_value_t v);
 
+SENTRY_API int sentry_value_set_by_key_n(
+    sentry_value_t value, const char *k, size_t k_len, sentry_value_t v);
+
 /**
  * This removes a value from the map by key.
  */
 SENTRY_API int sentry_value_remove_by_key(sentry_value_t value, const char *k);
+SENTRY_API int sentry_value_remove_by_key_n(
+    sentry_value_t value, const char *k, size_t k_len);
 
 /**
  * Appends a value to a list.
@@ -262,6 +275,8 @@ SENTRY_API int sentry_value_remove_by_index(sentry_value_t value, size_t index);
  */
 SENTRY_API sentry_value_t sentry_value_get_by_key(
     sentry_value_t value, const char *k);
+SENTRY_API sentry_value_t sentry_value_get_by_key_n(
+    sentry_value_t value, const char *k, size_t k_len);
 
 /**
  * Looks up a value in a map by key.  If missing a null value is returned.
@@ -272,6 +287,8 @@ SENTRY_API sentry_value_t sentry_value_get_by_key(
  */
 SENTRY_API sentry_value_t sentry_value_get_by_key_owned(
     sentry_value_t value, const char *k);
+SENTRY_API sentry_value_t sentry_value_get_by_key_owned_n(
+    sentry_value_t value, const char *k, size_t k_len);
 
 /**
  * Looks up a value in a list by index.  If missing a null value is returned.
@@ -359,6 +376,8 @@ SENTRY_API sentry_value_t sentry_value_new_event(void);
  */
 SENTRY_API sentry_value_t sentry_value_new_message_event(
     sentry_level_t level, const char *logger, const char *text);
+SENTRY_API sentry_value_t sentry_value_new_message_event_n(sentry_level_t level,
+    const char *logger, size_t logger_len, const char *text, size_t text_len);
 
 /**
  * Creates a new Breadcrumb with a specific type and message.
@@ -369,6 +388,8 @@ SENTRY_API sentry_value_t sentry_value_new_message_event(
  */
 SENTRY_API sentry_value_t sentry_value_new_breadcrumb(
     const char *type, const char *message);
+SENTRY_API sentry_value_t sentry_value_new_breadcrumb_n(
+    const char *type, size_t type_len, const char *message, size_t message_len);
 
 /**
  * Creates a new Exception value.
@@ -384,6 +405,8 @@ SENTRY_API sentry_value_t sentry_value_new_breadcrumb(
  */
 SENTRY_EXPERIMENTAL_API sentry_value_t sentry_value_new_exception(
     const char *type, const char *value);
+SENTRY_EXPERIMENTAL_API sentry_value_t sentry_value_new_exception_n(
+    const char *type, size_t type_len, const char *value, size_t value_len);
 
 /**
  * Creates a new Thread value.
@@ -397,20 +420,33 @@ SENTRY_EXPERIMENTAL_API sentry_value_t sentry_value_new_exception(
  */
 SENTRY_EXPERIMENTAL_API sentry_value_t sentry_value_new_thread(
     uint64_t id, const char *name);
+SENTRY_EXPERIMENTAL_API sentry_value_t sentry_value_new_thread_n(
+    uint64_t id, const char *name, size_t name_len);
 
 /**
  * Creates a new Stack Trace conforming to the Stack Trace Interface.
  *
  * See https://develop.sentry.dev/sdk/event-payloads/stacktrace/
  *
- * The returned object needs to be attached to either an exception
- * event, or a thread object.
+ * The returned object must be attached to either an exception or thread
+ * object.
  *
  * If `ips` is NULL the current stack trace is captured, otherwise `len`
  * stack trace instruction pointers are attached to the event.
  */
 SENTRY_EXPERIMENTAL_API sentry_value_t sentry_value_new_stacktrace(
     void **ips, size_t len);
+
+/**
+ * Sets the Stack Trace conforming to the Stack Trace Interface in a value.
+ *
+ * The value argument must be either an exception or thread object.
+ *
+ * If `ips` is NULL the current stack trace is captured, otherwise `len` stack
+ * trace instruction pointers are attached to the event.
+ */
+SENTRY_EXPERIMENTAL_API void sentry_value_set_stacktrace(
+    sentry_value_t value, void **ips, size_t len);
 
 /**
  * Adds an Exception to an Event value.
@@ -517,6 +553,8 @@ SENTRY_API sentry_uuid_t sentry_uuid_new_v4(void);
  * Parses a uuid from a string.
  */
 SENTRY_API sentry_uuid_t sentry_uuid_from_string(const char *str);
+SENTRY_API sentry_uuid_t sentry_uuid_from_string_n(
+    const char *str, size_t str_len);
 
 /**
  * Creates a uuid from bytes.
@@ -561,7 +599,6 @@ SENTRY_API void sentry_envelope_free(sentry_envelope_t *envelope);
 SENTRY_API sentry_value_t sentry_envelope_get_event(
     const sentry_envelope_t *envelope);
 
-#ifdef SENTRY_PERFORMANCE_MONITORING
 /**
  * Given an Envelope, returns the embedded Transaction if there is one.
  *
@@ -569,7 +606,6 @@ SENTRY_API sentry_value_t sentry_envelope_get_event(
  */
 SENTRY_EXPERIMENTAL_API sentry_value_t sentry_envelope_get_transaction(
     const sentry_envelope_t *envelope);
-#endif
 
 /**
  * Serializes the envelope.
@@ -588,6 +624,8 @@ SENTRY_API char *sentry_envelope_serialize(
  */
 SENTRY_API int sentry_envelope_write_to_file(
     const sentry_envelope_t *envelope, const char *path);
+SENTRY_API int sentry_envelope_write_to_file_n(
+    const sentry_envelope_t *envelope, const char *path, size_t path_len);
 
 /**
  * The Sentry Client Options.
@@ -705,6 +743,20 @@ SENTRY_API void sentry_transport_free(sentry_transport_t *transport);
 SENTRY_API sentry_transport_t *sentry_new_function_transport(
     void (*func)(const sentry_envelope_t *envelope, void *data), void *data);
 
+/**
+ * This represents an interface for user-defined backends.
+ *
+ * Backends are responsible to handle crashes. They are maintained at runtime
+ * via various life-cycle hooks from the sentry-core.
+ *
+ * At this point none of those interfaces are exposed in the API including
+ * creation and destruction. The main use-case of the backend in the API at this
+ * point is to disable it via `sentry_options_set_backend` at runtime before it
+ * is initialized.
+ */
+struct sentry_backend_s;
+typedef struct sentry_backend_s sentry_backend_t;
+
 /* -- Options APIs -- */
 
 /**
@@ -741,11 +793,28 @@ SENTRY_API void sentry_options_set_transport(
  * call `sentry_value_decref` on the provided event, and return a
  * `sentry_value_new_null()` instead.
  *
+ * If you have set an `on_crash` callback (independent of whether it discards or
+ * retains the event), `before_send` will no longer be invoked for crash-events,
+ * which allows you to better distinguish between crashes and all other events
+ * in client-side pre-processing.
+ *
  * This function may be invoked inside of a signal handler and must be safe for
  * that purpose, see https://man7.org/linux/man-pages/man7/signal-safety.7.html.
  * On Windows, it may be called from inside of a `UnhandledExceptionFilter`, see
  * the documentation on SEH (structured exception handling) for more information
  * https://docs.microsoft.com/en-us/windows/win32/debug/structured-exception-handling
+ *
+ * Up to version 0.4.18 the `before_send` callback wasn't invoked in case the
+ * event sampling discarded an event. In the current implementation the
+ * `before_send` callback is invoked even if the event sampling discards the
+ * event, following the cross-SDK session filter order:
+ *
+ * https://develop.sentry.dev/sdk/sessions/#filter-order
+ *
+ * On Windows the crashpad backend can capture fast-fail crashes which by-pass
+ * SEH. Since the `before_send` is called by a local exception-handler, it will
+ * not be invoked when such a crash happened, even though a minidump will be
+ * sent.
  */
 typedef sentry_value_t (*sentry_event_function_t)(
     sentry_value_t event, void *hint, void *closure);
@@ -759,9 +828,69 @@ SENTRY_API void sentry_options_set_before_send(
     sentry_options_t *opts, sentry_event_function_t func, void *data);
 
 /**
+ * Type of the `on_crash` callback.
+ *
+ * The `on_crash` callback replaces the `before_send` callback for crash events.
+ * The interface is analogous to `before_send` in that the callback takes
+ * ownership of the `event`, and should usually return that same event. In case
+ * the event should be discarded, the callback needs to call
+ * `sentry_value_decref` on the provided event, and return a
+ * `sentry_value_new_null()` instead.
+ *
+ * Only the `inproc` backend currently fills the passed-in event with useful
+ * data and processes any modifications to the return value. Since both
+ * `breakpad` and `crashpad` use minidumps to capture the crash state, the
+ * passed-in event is empty when using these backends, and they ignore any
+ * changes to the return value.
+ *
+ * If you set this callback in the options, it prevents a concurrently enabled
+ * `before_send` callback from being invoked in the crash case. This allows for
+ * better differentiation between crashes and other events and gradual migration
+ * from existing `before_send` implementations:
+ *
+ *  - if you have a `before_send` implementation and do not define an `on_crash`
+ *    callback your application will receive both normal and crash events as
+ *    before
+ *  - if you have a `before_send` implementation but only want to handle normal
+ *    events with it, then you can define an `on_crash` callback that returns
+ *    the passed-in event and does nothing else
+ *  - if you are not interested in normal events, but only want to act on
+ *    crashes (within the limits mentioned below), then only define an
+ *    `on_crash` callback with the option to filter (on all backends) or enrich
+ *    (only inproc) the crash event
+ *
+ * This function may be invoked inside of a signal handler and must be safe for
+ * that purpose, see https://man7.org/linux/man-pages/man7/signal-safety.7.html.
+ * On Windows, it may be called from inside of a `UnhandledExceptionFilter`, see
+ * the documentation on SEH (structured exception handling) for more information
+ * https://docs.microsoft.com/en-us/windows/win32/debug/structured-exception-handling
+ *
+ * Platform-specific behavior:
+ *
+ *  - does not work with crashpad on macOS.
+ *  - for breakpad on Linux the `uctx` parameter is always NULL.
+ *  - on Windows the crashpad backend can capture fast-fail crashes which
+ * by-pass SEH. Since `on_crash` is called by a local exception-handler, it will
+ * not be invoked when such a crash happened, even though a minidump will be
+ * sent.
+ */
+typedef sentry_value_t (*sentry_crash_function_t)(
+    const sentry_ucontext_t *uctx, sentry_value_t event, void *closure);
+
+/**
+ * Sets the `on_crash` callback.
+ *
+ * See the `sentry_crash_function_t` typedef above for more information.
+ */
+SENTRY_API void sentry_options_set_on_crash(
+    sentry_options_t *opts, sentry_crash_function_t func, void *data);
+
+/**
  * Sets the DSN.
  */
 SENTRY_API void sentry_options_set_dsn(sentry_options_t *opts, const char *dsn);
+SENTRY_API void sentry_options_set_dsn_n(
+    sentry_options_t *opts, const char *dsn, size_t dsn_len);
 
 /**
  * Gets the DSN.
@@ -772,6 +901,19 @@ SENTRY_API const char *sentry_options_get_dsn(const sentry_options_t *opts);
  * Sets the sample rate, which should be a double between `0.0` and `1.0`.
  * Sentry will randomly discard any event that is captured using
  * `sentry_capture_event` when a sample rate < 1 is set.
+ *
+ * The sampling happens at the end of the event processing according to the
+ * following order:
+ *
+ * https://develop.sentry.dev/sdk/sessions/#filter-order
+ *
+ * Only items 3. to 6. are currently applicable to sentry-native. This means
+ * each processing step is executed even if the sampling discards the event
+ * before sending it to the backend. This is particularly relevant to users of
+ * the `before_send` callback.
+ *
+ * The above is in contrast to versions up to 0.4.18 where the sampling happened
+ * at the beginning of the processing/filter sequence.
  */
 SENTRY_API void sentry_options_set_sample_rate(
     sentry_options_t *opts, double sample_rate);
@@ -786,6 +928,8 @@ SENTRY_API double sentry_options_get_sample_rate(const sentry_options_t *opts);
  */
 SENTRY_API void sentry_options_set_release(
     sentry_options_t *opts, const char *release);
+SENTRY_API void sentry_options_set_release_n(
+    sentry_options_t *opts, const char *release, size_t release_len);
 
 /**
  * Gets the release.
@@ -797,6 +941,8 @@ SENTRY_API const char *sentry_options_get_release(const sentry_options_t *opts);
  */
 SENTRY_API void sentry_options_set_environment(
     sentry_options_t *opts, const char *environment);
+SENTRY_API void sentry_options_set_environment_n(
+    sentry_options_t *opts, const char *environment, size_t environment_len);
 
 /**
  * Gets the environment.
@@ -809,6 +955,8 @@ SENTRY_API const char *sentry_options_get_environment(
  */
 SENTRY_API void sentry_options_set_dist(
     sentry_options_t *opts, const char *dist);
+SENTRY_API void sentry_options_set_dist_n(
+    sentry_options_t *opts, const char *dist, size_t dist_len);
 
 /**
  * Gets the dist.
@@ -822,6 +970,8 @@ SENTRY_API const char *sentry_options_get_dist(const sentry_options_t *opts);
  */
 SENTRY_API void sentry_options_set_http_proxy(
     sentry_options_t *opts, const char *proxy);
+SENTRY_API void sentry_options_set_http_proxy_n(
+    sentry_options_t *opts, const char *proxy, size_t proxy_len);
 
 /**
  * Returns the configured http proxy.
@@ -835,6 +985,8 @@ SENTRY_API const char *sentry_options_get_http_proxy(
  */
 SENTRY_API void sentry_options_set_ca_certs(
     sentry_options_t *opts, const char *path);
+SENTRY_API void sentry_options_set_ca_certs_n(
+    sentry_options_t *opts, const char *path, size_t path_len);
 
 /**
  * Returns the configured path for ca certificates.
@@ -847,11 +999,39 @@ SENTRY_API const char *sentry_options_get_ca_certs(
  */
 SENTRY_API void sentry_options_set_transport_thread_name(
     sentry_options_t *opts, const char *name);
+SENTRY_API void sentry_options_set_transport_thread_name_n(
+    sentry_options_t *opts, const char *name, size_t name_len);
 
 /**
  * Returns the configured http transport thread name.
  */
 SENTRY_API const char *sentry_options_get_transport_thread_name(
+    const sentry_options_t *opts);
+
+/*
+ * Configures the name of the sentry SDK. Returns 0 on success.
+ */
+SENTRY_API int sentry_options_set_sdk_name(
+    sentry_options_t *opts, const char *sdk_name);
+
+/*
+ * Configures the name of the sentry SDK. Returns 0 on success.
+ */
+SENTRY_API int sentry_options_set_sdk_name_n(
+    sentry_options_t *opts, const char *sdk_name, size_t sdk_name_len);
+
+/**
+ * Returns the configured sentry SDK name. Unless overwritten this defaults to
+ * SENTRY_SDK_NAME.
+ */
+SENTRY_API const char *sentry_options_get_sdk_name(
+    const sentry_options_t *opts);
+
+/**
+ * Returns the user agent. Unless overwritten this defaults to
+ * "SENTRY_SDK_NAME / SENTRY_SDK_VERSION".
+ */
+SENTRY_API const char *sentry_options_get_user_agent(
     const sentry_options_t *opts);
 
 /**
@@ -888,6 +1068,11 @@ typedef void (*sentry_logger_function_t)(
  * Sets the sentry-native logger function.
  *
  * Used for logging debug events when the `debug` option is set to true.
+ *
+ * Note: Multiple threads may invoke your `func`. If you plan to mutate any data
+ * inside the `userdata` argument after initialization, you must ensure proper
+ * synchronization inside the logger function.
+ *
  */
 SENTRY_API void sentry_options_set_logger(
     sentry_options_t *opts, sentry_logger_function_t func, void *userdata);
@@ -952,6 +1137,8 @@ SENTRY_API int sentry_options_get_symbolize_stacktraces(
  */
 SENTRY_API void sentry_options_add_attachment(
     sentry_options_t *opts, const char *path);
+SENTRY_API void sentry_options_add_attachment_n(
+    sentry_options_t *opts, const char *path, size_t path_len);
 
 /**
  * Sets the path to the crashpad handler if the crashpad backend is used.
@@ -969,6 +1156,8 @@ SENTRY_API void sentry_options_add_attachment(
  */
 SENTRY_API void sentry_options_set_handler_path(
     sentry_options_t *opts, const char *path);
+SENTRY_API void sentry_options_set_handler_path_n(
+    sentry_options_t *opts, const char *path, size_t path_len);
 
 /**
  * Sets the path to the Sentry Database Directory.
@@ -1001,6 +1190,8 @@ SENTRY_API void sentry_options_set_handler_path(
  */
 SENTRY_API void sentry_options_set_database_path(
     sentry_options_t *opts, const char *path);
+SENTRY_API void sentry_options_set_database_path_n(
+    sentry_options_t *opts, const char *path, size_t path_len);
 
 #ifdef SENTRY_PLATFORM_WINDOWS
 /**
@@ -1008,18 +1199,24 @@ SENTRY_API void sentry_options_set_database_path(
  */
 SENTRY_API void sentry_options_add_attachmentw(
     sentry_options_t *opts, const wchar_t *path);
+SENTRY_API void sentry_options_add_attachmentw_n(
+    sentry_options_t *opts, const wchar_t *path, size_t path_len);
 
 /**
  * Wide char version of `sentry_options_set_handler_path`.
  */
 SENTRY_API void sentry_options_set_handler_pathw(
     sentry_options_t *opts, const wchar_t *path);
+SENTRY_API void sentry_options_set_handler_pathw_n(
+    sentry_options_t *opts, const wchar_t *path, size_t path_len);
 
 /**
  * Wide char version of `sentry_options_set_database_path`.
  */
 SENTRY_API void sentry_options_set_database_pathw(
     sentry_options_t *opts, const wchar_t *path);
+SENTRY_API void sentry_options_set_database_pathw_n(
+    sentry_options_t *opts, const wchar_t *path, size_t path_len);
 #endif
 
 /**
@@ -1046,6 +1243,16 @@ SENTRY_API void sentry_options_set_shutdown_timeout(
  */
 SENTRY_API uint64_t sentry_options_get_shutdown_timeout(sentry_options_t *opts);
 
+/**
+ * Sets a user-defined backend.
+ *
+ * Since creation and destruction of backends is not exposed in the API, this
+ * can only be used to set the backend to `NULL`, which disables the backend in
+ * the initialization.
+ */
+SENTRY_API void sentry_options_set_backend(
+    sentry_options_t *opts, sentry_backend_t *backend);
+
 /* -- Global APIs -- */
 
 /**
@@ -1065,6 +1272,10 @@ SENTRY_API int sentry_init(sentry_options_t *options);
  * The `timeout` parameter is in milliseconds.
  *
  * Returns 0 on success, or a non-zero return value in case the timeout is hit.
+ *
+ * Note that this function will block the thread it was called from until the
+ * sentry background worker has finished its work or it timed out, whichever
+ * comes first.
  */
 SENTRY_API int sentry_flush(uint64_t timeout);
 
@@ -1072,6 +1283,14 @@ SENTRY_API int sentry_flush(uint64_t timeout);
  * Shuts down the sentry client and forces transports to flush out.
  *
  * Returns 0 on success.
+ *
+ * Note that this does not uninstall any crash handler installed by our
+ * backends, which will still process crashes after `sentry_close()`, except
+ * when using `crashpad` on Linux or the `inproc` backend.
+ *
+ * Further note that this function will block the thread it was called from
+ * until the sentry background worker has finished its work or it timed out,
+ * whichever comes first.
  */
 SENTRY_API int sentry_close(void);
 
@@ -1137,9 +1356,9 @@ SENTRY_API sentry_user_consent_t sentry_user_consent_get(void);
 /**
  * Sends a sentry event.
  *
- * If SENTRY_PERFORMANCE_MONITORING is enabled, returns a nil UUID if the event
- * being passed in is a transaction, and the transaction will not be sent nor
- * consumed. `sentry_transaction_finish` should be used to send transactions.
+ * If returns a nil UUID if the event being passed in is a transaction, and the
+ * transaction will not be sent nor consumed. `sentry_transaction_finish` should
+ * be used to send transactions.
  */
 SENTRY_API sentry_uuid_t sentry_capture_event(sentry_value_t event);
 
@@ -1170,31 +1389,40 @@ SENTRY_API void sentry_remove_user(void);
  * Sets a tag.
  */
 SENTRY_API void sentry_set_tag(const char *key, const char *value);
+SENTRY_API void sentry_set_tag_n(
+    const char *key, size_t key_len, const char *value, size_t value_len);
 
 /**
  * Removes the tag with the specified key.
  */
 SENTRY_API void sentry_remove_tag(const char *key);
+SENTRY_API void sentry_remove_tag_n(const char *key, size_t key_len);
 
 /**
  * Sets extra information.
  */
 SENTRY_API void sentry_set_extra(const char *key, sentry_value_t value);
+SENTRY_API void sentry_set_extra_n(
+    const char *key, size_t key_len, sentry_value_t value);
 
 /**
  * Removes the extra with the specified key.
  */
 SENTRY_API void sentry_remove_extra(const char *key);
+SENTRY_API void sentry_remove_extra_n(const char *key, size_t key_len);
 
 /**
  * Sets a context object.
  */
 SENTRY_API void sentry_set_context(const char *key, sentry_value_t value);
+SENTRY_API void sentry_set_context_n(
+    const char *key, size_t key_len, sentry_value_t value);
 
 /**
  * Removes the context object with the specified key.
  */
 SENTRY_API void sentry_remove_context(const char *key);
+SENTRY_API void sentry_remove_context_n(const char *key, size_t key_len);
 
 /**
  * Sets the event fingerprint.
@@ -1203,6 +1431,8 @@ SENTRY_API void sentry_remove_context(const char *key);
  * trailing `NULL`.
  */
 SENTRY_API void sentry_set_fingerprint(const char *fingerprint, ...);
+SENTRY_API void sentry_set_fingerprint_n(
+    const char *fingerprint, size_t fingerprint_len, ...);
 
 /**
  * Removes the fingerprint.
@@ -1213,23 +1443,14 @@ SENTRY_API void sentry_remove_fingerprint(void);
  * Sets the transaction.
  */
 SENTRY_API void sentry_set_transaction(const char *transaction);
+SENTRY_API void sentry_set_transaction_n(
+    const char *transaction, size_t transaction_len);
 
 /**
  * Sets the event level.
  */
 SENTRY_API void sentry_set_level(sentry_level_t level);
 
-/**
- * Starts a new session.
- */
-SENTRY_API void sentry_start_session(void);
-
-/**
- * Ends a session.
- */
-SENTRY_API void sentry_end_session(void);
-
-#ifdef SENTRY_PERFORMANCE_MONITORING
 /**
  * Sets the maximum number of spans that can be attached to a
  * transaction.
@@ -1257,6 +1478,31 @@ SENTRY_EXPERIMENTAL_API void sentry_options_set_traces_sample_rate(
  */
 SENTRY_EXPERIMENTAL_API double sentry_options_get_traces_sample_rate(
     sentry_options_t *opts);
+
+/* -- Session APIs -- */
+
+typedef enum {
+    SENTRY_SESSION_STATUS_OK,
+    SENTRY_SESSION_STATUS_CRASHED,
+    SENTRY_SESSION_STATUS_ABNORMAL,
+    SENTRY_SESSION_STATUS_EXITED,
+} sentry_session_status_t;
+
+/**
+ * Starts a new session.
+ */
+SENTRY_API void sentry_start_session(void);
+
+/**
+ * Ends a session.
+ */
+SENTRY_API void sentry_end_session(void);
+
+/**
+ * Ends a session with an explicit `status` code.
+ */
+SENTRY_EXPERIMENTAL_API void sentry_end_session_with_status(
+    sentry_session_status_t status);
 
 /* -- Performance Monitoring/Tracing APIs -- */
 
@@ -1307,6 +1553,9 @@ typedef struct sentry_span_s sentry_span_t;
  */
 SENTRY_EXPERIMENTAL_API sentry_transaction_context_t *
 sentry_transaction_context_new(const char *name, const char *operation);
+SENTRY_EXPERIMENTAL_API sentry_transaction_context_t *
+sentry_transaction_context_new_n(const char *name, size_t name_len,
+    const char *operation, size_t operation_len);
 
 /**
  * Sets the `name` on a Transaction Context, which will be used in the
@@ -1317,6 +1566,8 @@ sentry_transaction_context_new(const char *name, const char *operation);
  */
 SENTRY_EXPERIMENTAL_API void sentry_transaction_context_set_name(
     sentry_transaction_context_t *tx_cxt, const char *name);
+SENTRY_EXPERIMENTAL_API void sentry_transaction_context_set_name_n(
+    sentry_transaction_context_t *tx_cxt, const char *name, size_t name_len);
 
 /**
  * Sets the `operation` on a Transaction Context, which will be used in the
@@ -1330,6 +1581,9 @@ SENTRY_EXPERIMENTAL_API void sentry_transaction_context_set_name(
  */
 SENTRY_EXPERIMENTAL_API void sentry_transaction_context_set_operation(
     sentry_transaction_context_t *tx_cxt, const char *operation);
+SENTRY_EXPERIMENTAL_API void sentry_transaction_context_set_operation_n(
+    sentry_transaction_context_t *tx_cxt, const char *operation,
+    size_t operation_len);
 
 /**
  * Sets the `sampled` field on a Transaction Context, which will be used in the
@@ -1367,6 +1621,9 @@ SENTRY_EXPERIMENTAL_API void sentry_transaction_context_remove_sampled(
  */
 SENTRY_EXPERIMENTAL_API void sentry_transaction_context_update_from_header(
     sentry_transaction_context_t *tx_cxt, const char *key, const char *value);
+SENTRY_EXPERIMENTAL_API void sentry_transaction_context_update_from_header_n(
+    sentry_transaction_context_t *tx_cxt, const char *key, size_t key_len,
+    const char *value, size_t value_len);
 
 /**
  * Starts a new Transaction based on the provided context, restored from an
@@ -1477,7 +1734,11 @@ SENTRY_EXPERIMENTAL_API void sentry_set_span(sentry_span_t *span);
  * in a thread-safe way.
  */
 SENTRY_EXPERIMENTAL_API sentry_span_t *sentry_transaction_start_child(
-    sentry_transaction_t *parent, char *operation, char *description);
+    sentry_transaction_t *parent, const char *operation,
+    const char *description);
+SENTRY_EXPERIMENTAL_API sentry_span_t *sentry_transaction_start_child_n(
+    sentry_transaction_t *parent, const char *operation, size_t operation_len,
+    const char *description, size_t description_len);
 
 /**
  * Starts a new Span.
@@ -1510,7 +1771,10 @@ SENTRY_EXPERIMENTAL_API sentry_span_t *sentry_transaction_start_child(
  * in a thread-safe way.
  */
 SENTRY_EXPERIMENTAL_API sentry_span_t *sentry_span_start_child(
-    sentry_span_t *parent, char *operation, char *description);
+    sentry_span_t *parent, const char *operation, const char *description);
+SENTRY_EXPERIMENTAL_API sentry_span_t *sentry_span_start_child_n(
+    sentry_span_t *parent, const char *operation, size_t operation_len,
+    const char *description, size_t description_len);
 
 /**
  * Finishes a Span.
@@ -1534,6 +1798,9 @@ SENTRY_EXPERIMENTAL_API void sentry_span_finish(sentry_span_t *span);
  */
 SENTRY_EXPERIMENTAL_API void sentry_transaction_set_tag(
     sentry_transaction_t *transaction, const char *tag, const char *value);
+SENTRY_EXPERIMENTAL_API void sentry_transaction_set_tag_n(
+    sentry_transaction_t *transaction, const char *tag, size_t tag_len,
+    const char *value, size_t value_len);
 
 /**
  * Removes a tag from a Transaction.
@@ -1543,6 +1810,8 @@ SENTRY_EXPERIMENTAL_API void sentry_transaction_set_tag(
  */
 SENTRY_EXPERIMENTAL_API void sentry_transaction_remove_tag(
     sentry_transaction_t *transaction, const char *tag);
+SENTRY_EXPERIMENTAL_API void sentry_transaction_remove_tag_n(
+    sentry_transaction_t *transaction, const char *tag, size_t tag_len);
 
 /**
  * Sets the given key in a Transaction's "data" section to the given value.
@@ -1552,6 +1821,9 @@ SENTRY_EXPERIMENTAL_API void sentry_transaction_remove_tag(
  */
 SENTRY_EXPERIMENTAL_API void sentry_transaction_set_data(
     sentry_transaction_t *transaction, const char *key, sentry_value_t value);
+SENTRY_EXPERIMENTAL_API void sentry_transaction_set_data_n(
+    sentry_transaction_t *transaction, const char *key, size_t key_len,
+    sentry_value_t value);
 
 /**
  * Removes a key from a Transaction's "data" section.
@@ -1561,6 +1833,8 @@ SENTRY_EXPERIMENTAL_API void sentry_transaction_set_data(
  */
 SENTRY_EXPERIMENTAL_API void sentry_transaction_remove_data(
     sentry_transaction_t *transaction, const char *key);
+SENTRY_EXPERIMENTAL_API void sentry_transaction_remove_data_n(
+    sentry_transaction_t *transaction, const char *key, size_t key_len);
 
 /**
  * Sets a tag on a Span to the given string value.
@@ -1572,6 +1846,8 @@ SENTRY_EXPERIMENTAL_API void sentry_transaction_remove_data(
  */
 SENTRY_EXPERIMENTAL_API void sentry_span_set_tag(
     sentry_span_t *span, const char *tag, const char *value);
+SENTRY_EXPERIMENTAL_API void sentry_span_set_tag_n(sentry_span_t *span,
+    const char *tag, size_t tag_len, const char *value, size_t value_len);
 
 /**
  * Removes a tag from a Span.
@@ -1581,6 +1857,8 @@ SENTRY_EXPERIMENTAL_API void sentry_span_set_tag(
  */
 SENTRY_EXPERIMENTAL_API void sentry_span_remove_tag(
     sentry_span_t *span, const char *tag);
+SENTRY_EXPERIMENTAL_API void sentry_span_remove_tag_n(
+    sentry_span_t *span, const char *tag, size_t tag_len);
 
 /**
  * Sets the given key in a Span's "data" section to the given value.
@@ -1590,6 +1868,8 @@ SENTRY_EXPERIMENTAL_API void sentry_span_remove_tag(
  */
 SENTRY_EXPERIMENTAL_API void sentry_span_set_data(
     sentry_span_t *span, const char *key, sentry_value_t value);
+SENTRY_EXPERIMENTAL_API void sentry_span_set_data_n(
+    sentry_span_t *span, const char *key, size_t key_len, sentry_value_t value);
 
 /**
  * Removes a key from a Span's "data" section.
@@ -1599,6 +1879,8 @@ SENTRY_EXPERIMENTAL_API void sentry_span_set_data(
  */
 SENTRY_EXPERIMENTAL_API void sentry_span_remove_data(
     sentry_span_t *span, const char *key);
+SENTRY_EXPERIMENTAL_API void sentry_span_remove_data_n(
+    sentry_span_t *span, const char *key, size_t key_len);
 
 /**
  * Sets a Transaction's name.
@@ -1608,6 +1890,29 @@ SENTRY_EXPERIMENTAL_API void sentry_span_remove_data(
  */
 SENTRY_EXPERIMENTAL_API void sentry_transaction_set_name(
     sentry_transaction_t *transaction, const char *name);
+SENTRY_EXPERIMENTAL_API void sentry_transaction_set_name_n(
+    sentry_transaction_t *transaction, const char *name, size_t name_len);
+
+/**
+ * Creates a new User Feedback with a specific name, email and comments.
+ *
+ * See https://develop.sentry.dev/sdk/envelopes/#user-feedback
+ *
+ * User Feedback has to be associated with a specific event that has been
+ * sent to Sentry earlier.
+ */
+SENTRY_API sentry_value_t sentry_value_new_user_feedback(
+    const sentry_uuid_t *uuid, const char *name, const char *email,
+    const char *comments);
+SENTRY_API sentry_value_t sentry_value_new_user_feedback_n(
+    const sentry_uuid_t *uuid, const char *name, size_t name_len,
+    const char *email, size_t email_len, const char *comments,
+    size_t comments_len);
+
+/**
+ * Captures a manually created User Feedback and sends it to Sentry.
+ */
+SENTRY_API void sentry_capture_user_feedback(sentry_value_t user_feedback);
 
 /**
  * The status of a Span or Transaction.
@@ -1708,7 +2013,50 @@ SENTRY_EXPERIMENTAL_API void sentry_transaction_iter_headers(
     sentry_transaction_t *tx, sentry_iter_headers_function_t callback,
     void *userdata);
 
-#endif
+/**
+ * Returns whether the application has crashed on the last run.
+ *
+ * Notes:
+ *   * The underlying value is set by sentry_init() - it must be called first.
+ *   * Call sentry_clear_crashed_last_run() to reset for the next app run.
+ *
+ * Possible return values:
+ *   1 = the last run was a crash
+ *   0 = no crash recognized
+ *  -1 = sentry_init() hasn't been called yet
+ */
+SENTRY_EXPERIMENTAL_API int sentry_get_crashed_last_run(void);
+
+/**
+ * Clear the status of the "crashed-last-run". You should explicitly call
+ * this after sentry_init() if you're using sentry_get_crashed_last_run().
+ * Otherwise, the same information is reported on any subsequent runs.
+ *
+ * Notes:
+ *   * This doesn't change the value of sentry_get_crashed_last_run() yet.
+ *     However, if sentry_init() is called again, the value will change.
+ *   * This may only be called after sentry_init() and before sentry_close().
+ *
+ * Returns 0 on success, 1 on error.
+ */
+SENTRY_EXPERIMENTAL_API int sentry_clear_crashed_last_run(void);
+
+/**
+ * Sentry SDK version.
+ */
+SENTRY_EXPERIMENTAL_API const char *sentry_sdk_version(void);
+
+/**
+ * Sentry SDK name set during build time.
+ * Deprecated: Please use sentry_options_get_sdk_name instead.
+ */
+SENTRY_EXPERIMENTAL_API const char *sentry_sdk_name(void);
+
+/**
+ * Sentry SDK User-Agent set during build time.
+ * Deprecated: Please use sentry_options_get_user_agent instead.
+ */
+SENTRY_EXPERIMENTAL_API const char *sentry_sdk_user_agent(void);
 
 #ifdef __cplusplus
 }
