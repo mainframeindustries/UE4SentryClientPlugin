@@ -107,43 +107,10 @@ static void _SentryLog(sentry_level_t level, const char* message, va_list args, 
 	module->SentryLog((int)level, message, args);
 }
 
-static sentry_value_t SentryEventFunction(sentry_value_t event, void* hint, void* closure)
+static sentry_value_t _SentryCrash(const sentry_ucontext_t* uctx, sentry_value_t event, void* closure)
 {
-
-	// if the level is anything but "fatal", just pass this on.
-	auto level = sentry_value_get_by_key(event, "level"); // returns borrowed ref
-	const char* levelstr = sentry_value_as_string(level);
-	if (!levelstr || strcmp(levelstr, "fatal"))
-	{
-		return event;
-	}
-
-#if 0
-	// We can just defer to the Error handler if we want here, get the dialogue box and everything...
-	// but that disables the sentry thing.
-	if (GError)
-	{
-		GError->HandleError();
-	}
-#endif
-
-
-	// Some code from WindowsCrashHandlingContext.cpp
-	// 
-	// Then try run time crash processing and broadcast information about a crash.
-	FCoreDelegates::OnHandleSystemError.Broadcast();
-
-	if (GLog)
-	{
-		//Panic flush the logs to make sure there are no entries queued. This is
-		//not thread safe so it will skip for example editor log.
-		# if ENGINE_MAJOR_VERSION > 5 || (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1)
-		GLog->Panic();
-		# else
-		GLog->PanicFlushThreadedLogs();
-		# endif
-	}
-	return event;
+	FSentryClientModule* module = static_cast<FSentryClientModule*>(closure);
+	return module->SentryCrash(uctx, event);
 }
 
 #endif
@@ -442,8 +409,8 @@ if (CrashPadLocation.IsEmpty())
 	// create a sentry transport
 	sentry_options_set_transport(options, FSentryTransport::New());
 
-	// Set a before-send-callback, to flush logging
-	sentry_options_set_before_send(options, &SentryEventFunction, (void*)this);
+	// Set an on crash callback
+	sentry_options_set_on_crash(options, _SentryCrash, (void*)this);
 
 	// Todo: set up a thing to add log breadcrumbs
 
@@ -513,6 +480,8 @@ FSentryClientModule* FSentryClientModule::Get()
 	return Module;
 }
 
+static bool crash_handled = false;
+
 void FSentryClientModule::SentryLog(int level, const char* message, va_list args)
 {
 #if SENTRY_HAVE_PLATFORM
@@ -546,13 +515,21 @@ void FSentryClientModule::SentryLog(int level, const char* message, va_list args
 		tlevel = "fatal";
 		break;
 	}
-	// disable this.  We don't want duplicate logs during init. Once
-	// we get an api to know we are handling a crash, we can decide to channel
-	// all logs to stderr at that point (progress during crash handling is reported
-	// at INFO level.
-#if 0 
-	if (level >= (int)SENTRY_LEVEL_INFO)
+
+	// In case crash is being handled, the standard unreal logging system
+	// has likely shut down.  Then we simply use stderr
+	if (crash_handled)
 	{
+		if (GLog)
+		{
+			//Panic flush the logs to make sure there are no entries queued. This is
+			//not thread safe so it will skip for example editor log.
+# if ENGINE_MAJOR_VERSION > 5 || (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1)
+			GLog->Panic();
+# else
+			GLog->PanicFlushThreadedLogs();
+# endif
+		}
 		// also output to standard error, since the log subsystem may have crashed
 		// if we are here during error handling
 		FILE* out = stderr;
@@ -560,7 +537,38 @@ void FSentryClientModule::SentryLog(int level, const char* message, va_list args
 		fflush(out);
 	}
 #endif
+}
+
+sentry_value_t FSentryClientModule::SentryCrash(const sentry_ucontext_t* uctx, sentry_value_t event)
+{
+	// flag that a crash happened for the logger
+	crash_handled = true;
+
+#if 0
+	// We can just defer to the Error handler if we want here, get the dialogue box and everything...
+	// but that disables the sentry thing.
+	if (GError)
+	{
+		GError->HandleError();
+	}
 #endif
+
+	// Some code from WindowsCrashHandlingContext.cpp
+	// 
+	// Then try run time crash processing and broadcast information about a crash.
+	FCoreDelegates::OnHandleSystemError.Broadcast();
+
+	if (GLog)
+	{
+		//Panic flush the logs to make sure there are no entries queued. This is
+		//not thread safe so it will skip for example editor log.
+# if ENGINE_MAJOR_VERSION > 5 || (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 1)
+		GLog->Panic();
+# else
+		GLog->PanicFlushThreadedLogs();
+# endif
+	}
+	return event;
 }
 
 void FSentryClientModule::SetupContext()

@@ -86,6 +86,7 @@ public:
 	bool IsInitialized() const { return initialized; }
 
 	static void SentryLog(int level, const char* message, va_list args);
+	static sentry_value_t SentryCrash(const sentry_ucontext_t* uctx, sentry_value_t event);
 
 	ELogVerbosity::Type GetVerbosity() const { return Verbosity; }
 	void SetVerbosity(ELogVerbosity::Type _Verbosity) { Verbosity = _Verbosity; }
