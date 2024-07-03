@@ -403,6 +403,15 @@ if (CrashPadLocation.IsEmpty())
 	sentry_options_add_attachment(options, TCHAR_TO_UTF8(*logfile));
 #endif
 
+#if !UE_SERVER
+	FString feedbackScreenshot = FPaths::ScreenShotDir() / TEXT("feedback.png");
+#if PLATFORM_WINDOWS
+	sentry_options_add_attachmentw(options, *feedbackScreenshot);
+#else
+	sentry_options_add_attachment(options, TCHAR_TO_UTF8(*feedbackScreenshot));
+#endif
+#endif
+	
 	// Consent handling
 	sentry_options_set_require_user_consent(options, IsConsentRequired);
 
