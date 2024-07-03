@@ -527,7 +527,7 @@ void FSentryClientModule::SentryLog(int level, const char* message, va_list args
 		tlevel = "debug";
 		break;
 	case SENTRY_LEVEL_INFO:
-		UE_LOG(LogSentryCore, Display, TEXT("%s"), ANSI_TO_TCHAR(buf));
+		UE_LOG(LogSentryCore, Log, TEXT("%s"), ANSI_TO_TCHAR(buf));
 		tlevel = "info";
 		break;
 	case SENTRY_LEVEL_WARNING:

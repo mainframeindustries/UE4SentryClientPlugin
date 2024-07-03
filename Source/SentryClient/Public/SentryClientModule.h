@@ -9,7 +9,7 @@
 #include "SentryClientModule.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogSentryClient, Log, All);
-DECLARE_LOG_CATEGORY_EXTERN(LogSentryCore, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(LogSentryCore, Verbose, All);
 
 // use this to figure out the plugin folder at runtime.
 // if the name of this plugin changes, it needs to be reflected here.
