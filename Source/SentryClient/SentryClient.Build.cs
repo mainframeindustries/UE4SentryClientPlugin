@@ -70,7 +70,7 @@ public class SentryClient : ModuleRules
 		// but for windows, it can be problematic if the game is running under anti-cheat software.
 		// In that case, breakpad can be used instead, which will upload crashes upon the next run
 		bool bUseCrashPad = true;
-		
+
 		bool bIsWindows = Target.Platform == UnrealTargetPlatform.Win64;
 		if (bIsWindows)
 		{

@@ -77,24 +77,30 @@ We build the static version of the sdk, with `none` transport, since the plugin 
 its own http transport via the unreal engine.
 
 ### Building for Windows
+
+For windows, we need to build both Crashpad and Breakpad enabled versions of the library since the
+plugin can select, at compilation time, which backend to use.
+
+A batch file compiling both versions is available at `Source/ThirdParty/build_win.cmd`
+
+#### Crashpad
+
+The following are the steps needed to build the crashpad-backend.
+
 We must use the `RelWithDebInfo` configuration because the `Debug` configuration links with
 the Debug windows CRT, which is incompatible with UE. UnrealEngine 4.26 uses VisualStudio 2017 as the official code generator.  Newer versions of VisualStudio create code that cannot be linked with an engine built with 2017.
 
 1. Install cmake, e.g. using `choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'` (see https://chocolatey.org/ for the choco installer)
 2. Open a command shell and enter the `Source/ThirdParty/sentry-native` folder
-3. Delete any pre-existing `build` folder
-4. Run `cmake -G "Visual Studio 17 2022" -A x64 -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none` to configure cmake
-6. Run `cmake --build build --config RelWithDebInfo` to build the binaries (do not specify --parallel, it will only build the `Debug` config)
-7. Run `cmake --install build --prefix ../../../Binaries/ThirdParty/sentry-native/Win64 --config RelWithDebInfo`
+3. Delete any pre-existing `build-win-crashpad` folder
+4. Run `cmake -G "Visual Studio 17 2022" -A x64 -B build-win-crashpad -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DSENTRY_TRANSPORT=none` to configure cmake
+6. Run `cmake --build build-win-crashpad --config RelWithDebInfo` to build the binaries (do not specify --parallel, it will only build the `Debug` config)
+7. Run `cmake --install build-win-crashpad --prefix ../../../Binaries/ThirdParty/sentry-native/Win64-Crashpad --config RelWithDebInfo`
 
-A batch file which performs the above steps is available in `Source/ThirdParty/build_win.cmd`
+#### Breakpad
 
-#### Using Breakpad on windows
-
-A separate batch file, `build_win-bp.cmd` configures and builds the `breakpad` in-process crash handler
-for games that need that.  Note that this handler will only upload crashes the next time the
-game is launched.  This will create a different version of `sentry.lib`.  In this case, `SentryClient.build.cs`
-must be modified, to specify that the windows build uses breakpad, see the source code for details.
+Building Breakpad binaries is similar, but we keep a separate build foler, `build-win-breakpad` and install
+the binaris in a `Win64-Breakpad` folder.  This is automatically done as part of the `build_win.cmd` script.
 
 ### Building for Linux
 This follows much the same steps as above, except that the `install` folder should be `Linux` instead of `Win64`
