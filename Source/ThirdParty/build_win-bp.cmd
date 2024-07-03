@@ -10,5 +10,5 @@ cmake -G "Visual Studio 17 2022" -A x64 -B build -DCMAKE_BUILD_TYPE=RelWithDebIn
 rem build the files (no parallel, that doesn't work)
 cmake --build build --config RelWithDebInfo
 rem install the binaries
-cmake --install build --prefix ../../../Binaries/ThirdParty/sentry-native/Win64 --config RelWithDebInfo
+cmake --install build --prefix ../../../Binaries/ThirdParty/sentry-native/Win64-Breakpad --config RelWithDebInfo
 popd

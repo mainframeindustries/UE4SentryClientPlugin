@@ -66,28 +66,29 @@ public class SentryClient : ModuleRules
 		bool SentryHavePlatform = false;
 		bool SentryDisable = false;  // for internal testing
 
+		// we support either Crashpad or breakpad.  Crashpad is the default and uploads immediately,
+		// but for windows, it can be problematic if the game is running under anti-cheat software.
+		// In that case, breakpad can be used instead, which will upload crashes upon the next run
 		bool bUseCrashPad = true;
-		bool bUseBreakPad = false;
-
+		
 		bool bIsWindows = Target.Platform == UnrealTargetPlatform.Win64;
 		if (bIsWindows)
 		{
 			// if you want to use breakpad instead on windows, the libraries must be rebuild
 			// and the following inverted.
 			bUseCrashPad = true;
-			bUseBreakPad = false;
 		}
 
 		if (!SentryDisable && bIsWindows)
 		{
 			SentryHavePlatform = true;
-			SentryPlatform = Path.Combine(SentryRoot, "Win64");
 			SentryLibs = new string[]
 			{
 				"sentry.lib",
 			};
 			if (bUseCrashPad)
 			{
+				SentryPlatform = Path.Combine(SentryRoot, "Win64-Crashpad");
 				SentryLibs = SentryLibs.Concat(
 					new string[]
 					{
@@ -105,10 +106,9 @@ public class SentryClient : ModuleRules
 				RuntimeDependencies.Add(Path.Combine(SentryPlatform, "bin", "crashpad_handler.exe"));
 				RuntimeDependencies.Add(Path.Combine(SentryPlatform, "bin", "crashpad_wer.dll"));
 			}
-			if (bUseBreakPad)
+			else
 			{
-				// append an array to SentryLibs
-
+				SentryPlatform = Path.Combine(SentryRoot, "Win64-Breakpad");
 				SentryLibs = SentryLibs.Concat(
 					new string[]
 					{
@@ -145,7 +145,7 @@ public class SentryClient : ModuleRules
 				).ToArray();
 				RuntimeDependencies.Add(Path.Combine(SentryPlatform, "bin", "crashpad_handler"));
 			}
-			if (bUseBreakPad)
+			else
 			{
 				SentryLibs = SentryLibs.Concat(
 					new string[]
