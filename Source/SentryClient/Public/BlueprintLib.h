@@ -290,5 +290,11 @@ public:
 	static void AddValueBreadcrumb(ESentryBreadcrumbType type, const FString& message,
 			const FString& _category, ESentryLevel level, USentryValue *value);
 
+	/**
+	 * Creates a new User Feedback with a specific name, email and comments.
+	 * See https://develop.sentry.dev/sdk/envelopes/#user-feedback
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Sentry|UserFeedback")
+	static void SubmitUserFeedback(const FString& Name, const FString& EventMessage, const FString& Comments);
 
 };

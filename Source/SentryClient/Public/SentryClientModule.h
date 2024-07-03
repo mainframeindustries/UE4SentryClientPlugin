@@ -135,6 +135,9 @@ public:
 	bool ConsentRequired = false;
 
 	UPROPERTY(Config);
+	bool SubmitUserFeedback = true;
+
+	UPROPERTY(Config);
 	FString Tags;	// comma separated list of key=value tags
 
 	// return an environment or command line option.  Return true if found.

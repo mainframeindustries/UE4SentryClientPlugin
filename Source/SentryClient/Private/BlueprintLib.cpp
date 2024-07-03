@@ -399,6 +399,24 @@ void USentryBlueprintLibrary::AddValueBreadcrumb(ESentryBreadcrumbType type, con
 #endif
 }
 
+void USentryBlueprintLibrary::SubmitUserFeedback(const FString& Name, const FString& EventMessage, const FString& Comments)
+{
+#if SENTRY_HAVE_PLATFORM
+	if (USentryClientConfig::Get()->SubmitUserFeedback == false)
+	{
+		return;
+	}
+	sentry_value_t event = sentry_value_new_message_event(
+		SENTRY_LEVEL_DEBUG, "feedback-logger", TCHAR_TO_UTF8(*EventMessage));
+	sentry_uuid_t event_id = sentry_capture_event(event);
+	
+	sentry_value_t user_feedback = sentry_value_new_user_feedback(
+		&event_id, TCHAR_TO_UTF8(*Name), TCHAR_TO_UTF8(*Name),
+		TCHAR_TO_UTF8(*Comments));
+	sentry_capture_user_feedback(user_feedback);
+#endif
+}
+
 #if SENTRY_HAVE_PLATFORM
 sentry_value_t BreadCrumb(ESentryBreadcrumbType type, const FString& message,
 	const FString& category, ESentryLevel level)
