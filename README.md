@@ -119,3 +119,6 @@ crashpad handler is out of process and uploads immediately, rather than during t
 4. Run `cmake --install build-linux --prefix ../../../Binaries/ThirdParty/sentry-native/Linux --config RelWithDebInfo`
 
 A shell script which performs the above is available in `Source/ThirdParty/build_linux.sh`
+
+**Note:**  the `crashpad_handler` requires the `libunwind` shared library to be installed on the machine.  You can
+install it with something akin to `apt install libunwind8`.
