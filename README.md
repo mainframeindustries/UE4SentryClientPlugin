@@ -107,7 +107,14 @@ This follows much the same steps as above, except that the `install` folder shou
 You need a minimum version of `CMake 3.12` for this to work.  In case of problems running the first
 step, try upgrading cmake.  We will use the `crashpad` backend for linux, instead of the default `breakpad` since the
 crashpad handler is out of process and uploads immediately, rather than during the next run.  This is important for linux servers, particulary in containers, where the server may not be run again in the same place (and thus, the delayed uploading of the crash will not occur.)
-1. Install compilation prerequisites, such as `build-essential` along with other libs: `zlib-dev`, `libc++-dev`,
+
+Another thing to consider is that for Unreal, you want to be using a Ubuntu-18 / CentOS7 compatible environment
+so that you have the same run-time requirements (glibc) as the unreal game you are targetting.  For windows users, using a
+WSL environment with **Ubuntu-18.04** and installing the latests cmake on it will be adequate.
+
+**Todo:** Add a docker definition to build linux binaries.
+
+1. Install compilation prerequisites, such as `build-essential` along with other libs: `libz-dev`, `libc++-dev`,
    `libc++abi-dev`, `clang`, `libcurl4-openssl-dev`.  This varies according to your distro.  See `CONTRIBUTING.md` in `sentry-native` for info.
 2. `cd` to `Source/ThirdParty/sentry-native`
 3. Delete any pre-existing `build-linux` folder
@@ -120,5 +127,5 @@ crashpad handler is out of process and uploads immediately, rather than during t
 
 A shell script which performs the above is available in `Source/ThirdParty/build_linux.sh`
 
-**Note:**  the `crashpad_handler` requires the `libunwind` shared library to be installed on the machine.  You can
+**Note:**  the `crashpad_handler` requires the `libunwind` shared library to be installed on the machine at runtime.  You can
 install it with something akin to `apt install libunwind8`.
