@@ -110,9 +110,7 @@ crashpad handler is out of process and uploads immediately, rather than during t
 
 Another thing to consider is that for Unreal, you want to be using a Ubuntu-18 / CentOS7 compatible environment
 so that you have the same run-time requirements (glibc) as the unreal game you are targetting.  For windows users, using a
-WSL environment with **Ubuntu-18.04** and installing the latests cmake on it will be adequate.
-
-**Todo:** Add a docker definition to build linux binaries.
+WSL environment with **Ubuntu-18.04** and installing the latest cmake on it will be adequate. A `Dockerfile` is supplied which assembles the correct build environment.
 
 1. Install compilation prerequisites, such as `build-essential` along with other libs: `libz-dev`, `libc++-dev`,
    `libc++abi-dev`, `clang`, `libcurl4-openssl-dev`.  This varies according to your distro.  See `CONTRIBUTING.md` in `sentry-native` for info.
@@ -125,7 +123,7 @@ WSL environment with **Ubuntu-18.04** and installing the latests cmake on it wil
 3. Run `cmake --build build-linux --config RelWithDebInfo --parallel`
 4. Run `cmake --install build-linux --prefix ../../../Binaries/ThirdParty/sentry-native/Linux --config RelWithDebInfo`
 
-A shell script which performs the above is available in `Source/ThirdParty/build_linux.sh`
+A shell script which performs the above is available in `Source/ThirdParty/build_linux.sh`.  To automatically use a custom *Docker* image for the build tools, use `Source/ThirdParty/build_linux_docker.sh`.
 
 **Note:**  the `crashpad_handler` requires the `libunwind` shared library to be installed on the machine at runtime.  You can
 install it with something akin to `apt install libunwind8`.
